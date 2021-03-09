@@ -4,12 +4,13 @@ mod systems;
 use bbecs::data_types::point::Point;
 use bbecs::world::{World, WorldMethods};
 use eyre::Result;
-use ggez::event::EventHandler;
+use ggez::event::{EventHandler, KeyCode};
 use ggez::graphics::{Color, Rect};
 use ggez::{graphics, Context, GameResult};
 use names::Names;
 use systems::create_mesh::create_mesh;
 use systems::draw::draw_system;
+use systems::handle_input::handle_input_system;
 
 pub struct GameState {
     world: World,
@@ -20,11 +21,15 @@ impl GameState {
         let mut world = World::new();
         let (width, height) = graphics::drawable_size(context);
 
-        // world.register(Names::Location, bbecs::components::Component::Point);
+        world.register(Names::Location, bbecs::components::Component::Point);
+        world.register(Names::Thrusting, bbecs::components::Component::Bool);
 
         world.add_resource::<Names>(Names::BackgroundColor, Color::new(0.1, 0.1, 0.1, 1.0));
         world.add_resource(Names::ArenaSize, Point::new(width, height));
         world.add_resource(Names::PlayerSize, 25.0_f32);
+        world.add_resource(Names::ThrusterColor, Color::new(1.0, 0.0, 0.0, 1.0));
+        world.add_resource(Names::ThrustKeyCode, KeyCode::Up);
+        world.add_resource(Names::Thrusting, false);
 
         Self::create_player(&mut world, width, height).expect("error creating player");
 
@@ -43,6 +48,7 @@ impl GameState {
 impl EventHandler for GameState {
     fn update(&mut self, context: &mut Context) -> GameResult {
         create_mesh(context, &mut self.world)?;
+        handle_input_system(&mut self.world, context)?;
         Ok(())
     }
 

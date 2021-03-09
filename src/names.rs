@@ -4,6 +4,9 @@ pub enum Names {
     Location,
     Mesh,
     PlayerSize,
+    Thrusting,
+    ThrusterColor,
+    ThrustKeyCode,
 }
 
 impl Into<String> for Names {
@@ -14,6 +17,9 @@ impl Into<String> for Names {
             Names::Location => "Location".to_owned(),
             Names::Mesh => "Mesh".to_owned(),
             Names::PlayerSize => "PlayerSize".to_owned(),
+            Names::Thrusting => "Thrusting".to_owned(),
+            Names::ThrusterColor => "ThrusterColor".to_owned(),
+            Names::ThrustKeyCode => "ThrustKeyCode".to_owned(),
         }
     }
 }

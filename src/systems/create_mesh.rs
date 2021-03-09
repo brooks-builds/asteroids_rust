@@ -1,7 +1,7 @@
 use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
 use bbecs::world::{World, WorldMethods};
-use ggez::graphics::{DrawMode, MeshBuilder, WHITE};
+use ggez::graphics::{Color, MeshBuilder, WHITE};
 use ggez::mint::Point2;
 use ggez::{Context, GameResult};
 
@@ -12,6 +12,8 @@ pub fn create_mesh(context: &mut Context, world: &mut World) -> GameResult {
         .query_one(Names::Location)
         .expect("querying for locations")
         .borrow();
+
+    let is_thrusting: &bool = world.get_resource(Names::Thrusting).unwrap();
     let player_size: &f32 = world.get_resource(Names::PlayerSize).unwrap();
 
     let mesh = &mut MeshBuilder::default();
@@ -38,6 +40,26 @@ pub fn create_mesh(context: &mut Context, world: &mut World) -> GameResult {
             ];
             mesh.triangles(&player_triangles, WHITE)
                 .expect("creating player triangle");
+
+            if *is_thrusting {
+                let thruster_color: &Color = world.get_resource(Names::ThrusterColor).unwrap();
+                let engine_triangles = [
+                    Point2 {
+                        x: location.x - player_size / 2.0,
+                        y: location.y + player_size / 4.0,
+                    },
+                    Point2 {
+                        x: location.x - player_size,
+                        y: location.y,
+                    },
+                    Point2 {
+                        x: location.x - player_size / 2.0,
+                        y: location.y - player_size / 4.0,
+                    },
+                ];
+                mesh.triangles(&engine_triangles, *thruster_color)
+                    .expect("creating engine triangle");
+            }
         });
 
     drop(wrapped_locations);
