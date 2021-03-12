@@ -1,26 +1,33 @@
 use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
-use bbecs::world::{World, WorldMethods};
+use bbecs::world::World;
 use eyre::Result;
 use ggez::graphics::{DrawParam, Mesh};
-use ggez::{graphics, Context, GameResult};
+use ggez::{graphics, Context};
 
-use crate::names::Names;
+use crate::helpers::names::Names;
 
 pub fn draw_system(context: &mut Context, world: &mut World) -> Result<()> {
-    let player_mesh: &Mesh = world.get_resource(Names::PlayerMesh)?;
     let wrapped_locations = world.query_one(Names::Location).unwrap().borrow();
     let locations: &Vec<Point> = wrapped_locations.cast()?;
     let wrapped_rotations = world.query_one(Names::Rotation).unwrap().borrow();
     let rotations: &Vec<f32> = wrapped_rotations.cast()?;
+    let wrapped_meshes = world
+        .query_one(Names::Mesh)
+        .expect("querying for meshes")
+        .borrow();
+    let meshes: &Vec<Mesh> = wrapped_meshes.cast()?;
 
-    graphics::draw(
-        context,
-        player_mesh,
-        DrawParam::new()
-            .dest(locations[0].to_array())
-            .rotation(rotations[0]),
-    )
-    .unwrap();
+    meshes.iter().enumerate().for_each(|(index, mesh)| {
+        graphics::draw(
+            context,
+            mesh,
+            DrawParam::new()
+                .dest(locations[index].to_array())
+                .rotation(rotations[index]),
+        )
+        .unwrap();
+    });
+
     Ok(())
 }

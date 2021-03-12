@@ -1,7 +1,7 @@
 use asteroids_rust::GameState;
 use ggez::conf::WindowMode;
 use ggez::event::run;
-use ggez::{event, ContextBuilder, GameResult};
+use ggez::{ContextBuilder, GameResult};
 
 fn main() -> GameResult {
     let window_mode = WindowMode::default()

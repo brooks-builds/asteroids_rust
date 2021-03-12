@@ -3,7 +3,7 @@ use bbecs::data_types::point::Point;
 use bbecs::world::World;
 use eyre::Result;
 
-use crate::names::Names;
+use crate::helpers::names::Names;
 
 pub fn update_movement_system(world: &World) -> Result<()> {
     let mut wrapped_accelerations = world.query_one(Names::Acceleration).unwrap().borrow_mut();
@@ -13,8 +13,14 @@ pub fn update_movement_system(world: &World) -> Result<()> {
     let velocities: &mut Vec<Point> = wrapped_velocities.cast_mut()?;
     let locations: &mut Vec<Point> = wrapped_locations.cast_mut()?;
 
-    velocities[0].add(&accelerations[0]);
-    locations[0].add(&velocities[0]);
-    accelerations[0].multiply_scalar(0.0);
+    locations
+        .iter_mut()
+        .enumerate()
+        .for_each(|(index, location)| {
+            velocities[index].add(&accelerations[index]);
+            location.add(&velocities[index]);
+            accelerations[index].multiply_scalar(0.0);
+        });
+
     Ok(())
 }
