@@ -1,16 +1,17 @@
 pub enum Names {
     Acceleration,
     ArenaSize,
+    AsteroidSpeed,
     BackgroundColor,
     Location,
     Marker,
     Mesh,
     PlayerShipColor,
-    PlayerSize,
     RotateRightKeyCode,
     RotateLeftKeyCode,
     Rotation,
     RotationSpeed,
+    Size,
     ThrusterColor,
     Thrusting,
     ThrustKeyCode,
@@ -26,7 +27,7 @@ impl Into<String> for Names {
             Names::ArenaSize => "ArenaSize".to_owned(),
             Names::Location => "Location".to_owned(),
             Names::Mesh => "Mesh".to_owned(),
-            Names::PlayerSize => "PlayerSize".to_owned(),
+            Names::Size => "Size".to_owned(),
             Names::Thrusting => "Thrusting".to_owned(),
             Names::ThrusterColor => "ThrusterColor".to_owned(),
             Names::ThrustKeyCode => "ThrustKeyCode".to_owned(),
@@ -40,6 +41,7 @@ impl Into<String> for Names {
             Names::RotateLeftKeyCode => "RotateLeftKeyCode".to_owned(),
             Names::RotationSpeed => "RotationSpeed".to_owned(),
             Names::UpdateFps => "UpdateFps".to_owned(),
+            Names::AsteroidSpeed => "AsteroidSpeed".to_owned(),
         }
     }
 }

@@ -1,5 +1,6 @@
 use bbecs::components::CastComponents;
-use bbecs::world::{World, WorldMethods};
+use bbecs::resources::resource::ResourceCast;
+use bbecs::world::World;
 use eyre::Result;
 use ggez::graphics::{Color, Mesh};
 use ggez::Context;
@@ -8,18 +9,22 @@ use crate::helpers::create_player_ship::create_player_ship;
 use crate::helpers::get_player_index::get_player_index;
 use crate::helpers::names::Names;
 
-pub fn update_mesh_system(context: &mut Context, world: &mut World) -> Result<()> {
+pub fn update_mesh_system(context: &mut Context, world: &World) -> Result<()> {
     if let Some(player_index) = get_player_index(&world)? {
-        let is_thrusting: &bool = world.get_resource(Names::Thrusting)?;
-        let player_size: &f32 = world.get_resource(Names::PlayerSize)?;
-        let thruster_color: &Color = world.get_resource(Names::ThrusterColor)?;
-        let player_ship_color: &Color = world.get_resource(Names::PlayerShipColor)?;
+        let wrapped_is_thrusting = world.get_resource(Names::Thrusting)?.borrow();
+        let is_thrusting: &bool = wrapped_is_thrusting.cast()?;
+        let wrapped_sizes = world.query_one(Names::Size)?.borrow();
+        let sizes: &Vec<f32> = wrapped_sizes.cast()?;
+        let wrapped_thruster_color = world.get_resource(Names::ThrusterColor)?.borrow();
+        let thruster_color: &Color = wrapped_thruster_color.cast()?;
+        let wrapped_player_ship_color = world.get_resource(Names::PlayerShipColor)?.borrow();
+        let player_ship_color: &Color = wrapped_player_ship_color.cast()?;
         let mut wrapped_meshes = world.query_one(Names::Mesh).unwrap().borrow_mut();
         let meshes: &mut Vec<Mesh> = wrapped_meshes.cast_mut()?;
 
         let player_mesh = create_player_ship(
             context,
-            *player_size,
+            sizes[player_index],
             *player_ship_color,
             *is_thrusting,
             *thruster_color,

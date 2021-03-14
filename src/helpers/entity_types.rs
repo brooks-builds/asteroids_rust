@@ -1,6 +1,7 @@
 #[derive(strum_macros::ToString)]
 pub enum EntityTypes {
     Player,
+    Asteroid,
 }
 
 #[cfg(test)]

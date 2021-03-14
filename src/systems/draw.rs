@@ -7,7 +7,7 @@ use ggez::{graphics, Context};
 
 use crate::helpers::names::Names;
 
-pub fn draw_system(context: &mut Context, world: &mut World) -> Result<()> {
+pub fn draw_system(context: &mut Context, world: &World) -> Result<()> {
     let wrapped_locations = world.query_one(Names::Location).unwrap().borrow();
     let locations: &Vec<Point> = wrapped_locations.cast()?;
     let wrapped_rotations = world.query_one(Names::Rotation).unwrap().borrow();
