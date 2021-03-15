@@ -10,9 +10,15 @@ use crate::helpers::names::Names;
 
 pub fn handle_input_system(world: &World, context: &mut Context) -> GameResult {
     if let Some(player_index) = get_player_index(&world).unwrap() {
-        let wrapped_thrust_keycode = world.get_resource(Names::ThrustKeyCode).unwrap().borrow();
+        let wrapped_thrust_keycode = world
+            .get_resource(Names::ThrustKeyCode.to_string())
+            .unwrap()
+            .borrow();
         let thrust_keycode: &KeyCode = wrapped_thrust_keycode.cast().unwrap();
-        let mut wrapped_is_thrusting = world.get_resource(Names::Thrusting).unwrap().borrow_mut();
+        let mut wrapped_is_thrusting = world
+            .get_resource(Names::Thrusting.to_string())
+            .unwrap()
+            .borrow_mut();
         let is_thrusting: &mut bool = wrapped_is_thrusting.cast_mut().unwrap();
         if keyboard::is_key_pressed(context, *thrust_keycode) {
             *is_thrusting = true;
@@ -27,18 +33,24 @@ pub fn handle_input_system(world: &World, context: &mut Context) -> GameResult {
 
 fn handle_rotation(world: &World, context: &mut Context, player_index: usize) -> GameResult {
     let wrapped_rotate_left_keycode = world
-        .get_resource(Names::RotateLeftKeyCode)
+        .get_resource(Names::RotateLeftKeyCode.to_string())
         .unwrap()
         .borrow();
     let wrapped_rotate_right_keycode = world
-        .get_resource(Names::RotateRightKeyCode)
+        .get_resource(Names::RotateRightKeyCode.to_string())
         .unwrap()
         .borrow();
     let rotate_left_keycode: &KeyCode = wrapped_rotate_left_keycode.cast().unwrap();
     let rotate_right_keycode: &KeyCode = wrapped_rotate_right_keycode.cast().unwrap();
-    let mut wrapped_rotations = world.query_one(Names::Rotation).unwrap().borrow_mut();
+    let mut wrapped_rotations = world
+        .query_one(Names::Rotation.to_string())
+        .unwrap()
+        .borrow_mut();
     let rotations: &mut Vec<f32> = wrapped_rotations.cast_mut().unwrap();
-    let wrapped_rotation_speed = world.get_resource(Names::RotationSpeed).unwrap().borrow();
+    let wrapped_rotation_speed = world
+        .get_resource(Names::RotationSpeed.to_string())
+        .unwrap()
+        .borrow();
     let rotation_speed: &f32 = wrapped_rotation_speed.cast().unwrap();
 
     if keyboard::is_key_pressed(context, *rotate_left_keycode) {

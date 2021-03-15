@@ -8,12 +8,18 @@ use ggez::{graphics, Context};
 use crate::helpers::names::Names;
 
 pub fn draw_system(context: &mut Context, world: &World) -> Result<()> {
-    let wrapped_locations = world.query_one(Names::Location).unwrap().borrow();
+    let wrapped_locations = world
+        .query_one(Names::Location.to_string())
+        .unwrap()
+        .borrow();
     let locations: &Vec<Point> = wrapped_locations.cast()?;
-    let wrapped_rotations = world.query_one(Names::Rotation).unwrap().borrow();
+    let wrapped_rotations = world
+        .query_one(Names::Rotation.to_string())
+        .unwrap()
+        .borrow();
     let rotations: &Vec<f32> = wrapped_rotations.cast()?;
     let wrapped_meshes = world
-        .query_one(Names::Mesh)
+        .query_one(Names::Mesh.to_string())
         .expect("querying for meshes")
         .borrow();
     let meshes: &Vec<Mesh> = wrapped_meshes.cast()?;

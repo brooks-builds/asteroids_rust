@@ -7,9 +7,9 @@ use eyre::Result;
 use crate::helpers::names::Names;
 
 pub fn handle_screen_edges_system(world: &World) -> Result<()> {
-    let wrapped_arena_size = world.get_resource(Names::ArenaSize)?.borrow();
+    let wrapped_arena_size = world.get_resource(Names::ArenaSize.to_string())?.borrow();
     let arena_size: &Point = wrapped_arena_size.cast()?;
-    let mut wrapped_locations = world.query_one(Names::Location)?.borrow_mut();
+    let mut wrapped_locations = world.query_one(Names::Location.to_string())?.borrow_mut();
     let locations: &mut Vec<Point> = wrapped_locations.cast_mut()?;
 
     locations.iter_mut().for_each(|location| {

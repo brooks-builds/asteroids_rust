@@ -13,8 +13,10 @@ use helpers::create_asteroid::create_asteroid_mesh;
 use helpers::create_player_ship::create_player_ship;
 use helpers::entity_types::EntityTypes;
 use helpers::names::Names;
-use rand::random;
+use rand::prelude::ThreadRng;
+use rand::{random, thread_rng};
 use systems::collide_with_asteroids::collide_with_asteroids_system;
+use systems::create_ship_debris::create_ship_debris_system;
 use systems::draw::draw_system;
 use systems::handle_input::handle_input_system;
 use systems::handle_screen_edges::handle_screen_edges_system;
@@ -25,6 +27,7 @@ use systems::update_rotation::update_rotation_system;
 
 pub struct GameState {
     world: World,
+    random: ThreadRng,
 }
 
 impl GameState {
@@ -39,27 +42,41 @@ impl GameState {
         let player_location = Point::new(width / 2.0, height / 2.0);
         let asteroid_radius = 100.0;
 
-        world.register(Names::Location, bbecs::components::Component::Point);
-        world.register(Names::Thrusting, bbecs::components::Component::Bool);
-        world.register(Names::Rotation, Component::F32);
-        world.register(Names::Acceleration, Component::Point);
-        world.register(Names::Velocity, Component::Point);
-        world.register(Names::Mesh, Component::Mesh);
-        world.register(Names::Marker, Component::Marker);
-        world.register(Names::Size, Component::F32);
+        world.register(
+            Names::Location.to_string(),
+            bbecs::components::Component::Point,
+        );
+        world.register(
+            Names::Thrusting.to_string(),
+            bbecs::components::Component::Bool,
+        );
+        world.register(Names::Rotation.to_string(), Component::F32);
+        world.register(Names::Acceleration.to_string(), Component::Point);
+        world.register(Names::Velocity.to_string(), Component::Point);
+        world.register(Names::Mesh.to_string(), Component::Mesh);
+        world.register(Names::Marker.to_string(), Component::Marker);
+        world.register(Names::Size.to_string(), Component::F32);
 
-        world.add_resource::<Names>(Names::BackgroundColor, Color::new(0.1, 0.1, 0.1, 1.0));
-        world.add_resource(Names::ArenaSize, Point::new(width, height));
-        world.add_resource(Names::ThrusterColor, thruster_color);
-        world.add_resource(Names::ThrustKeyCode, KeyCode::Up);
-        world.add_resource(Names::Thrusting, is_thrusting);
-        world.add_resource(Names::PlayerShipColor, player_ship_color);
-        world.add_resource(Names::ThrustSpeed, 0.2_f32);
-        world.add_resource(Names::RotateLeftKeyCode, KeyCode::Left);
-        world.add_resource(Names::RotateRightKeyCode, KeyCode::Right);
-        world.add_resource(Names::RotationSpeed, 0.1_f32);
-        world.add_resource(Names::UpdateFps, 60_u32);
-        world.add_resource(Names::AsteroidSpeed, asteroid_speed);
+        world.add_resource(
+            Names::BackgroundColor.to_string(),
+            Color::new(0.1, 0.1, 0.1, 1.0),
+        );
+        world.add_resource(Names::ArenaSize.to_string(), Point::new(width, height));
+        world.add_resource(Names::ThrusterColor.to_string(), thruster_color);
+        world.add_resource(Names::ThrustKeyCode.to_string(), KeyCode::Up);
+        world.add_resource(Names::Thrusting.to_string(), is_thrusting);
+        world.add_resource(Names::PlayerShipColor.to_string(), player_ship_color);
+        world.add_resource(Names::ThrustSpeed.to_string(), 0.2_f32);
+        world.add_resource(Names::RotateLeftKeyCode.to_string(), KeyCode::Left);
+        world.add_resource(Names::RotateRightKeyCode.to_string(), KeyCode::Right);
+        world.add_resource(Names::RotationSpeed.to_string(), 0.1_f32);
+        world.add_resource(Names::UpdateFps.to_string(), 60_u32);
+        world.add_resource(Names::AsteroidSpeed.to_string(), asteroid_speed);
+        world.add_resource(Names::ShipDestroyed.to_string(), false);
+        world.add_resource(
+            Names::LastKnownPlayerLocation.to_string(),
+            Point::new(0.0, 0.0),
+        );
 
         Self::create_player(
             &mut world,
@@ -88,7 +105,10 @@ impl GameState {
             .unwrap();
         }
 
-        Ok(Self { world })
+        Ok(Self {
+            world,
+            random: thread_rng(),
+        })
     }
 
     fn create_player(
@@ -99,13 +119,13 @@ impl GameState {
     ) -> Result<()> {
         world
             .spawn_entity()?
-            .with_component(Names::Location, location)?
-            .with_component(Names::Rotation, 0.0_f32)?
-            .with_component(Names::Velocity, Point::new(0.0, 0.0))?
-            .with_component(Names::Acceleration, Point::new(0.0, 0.0))?
-            .with_component(Names::Mesh, player_ship)?
-            .with_component(Names::Marker, EntityTypes::Player.to_string())?
-            .with_component(Names::Size, size)?;
+            .with_component(Names::Location.to_string(), location)?
+            .with_component(Names::Rotation.to_string(), 0.0_f32)?
+            .with_component(Names::Velocity.to_string(), Point::new(0.0, 0.0))?
+            .with_component(Names::Acceleration.to_string(), Point::new(0.0, 0.0))?
+            .with_component(Names::Mesh.to_string(), player_ship)?
+            .with_component(Names::Marker.to_string(), EntityTypes::Player.to_string())?
+            .with_component(Names::Size.to_string(), size)?;
         Ok(())
     }
 
@@ -127,13 +147,13 @@ impl GameState {
 
         world
             .spawn_entity()?
-            .with_component(Names::Location, location)?
-            .with_component(Names::Rotation, 0.0_f32)?
-            .with_component(Names::Velocity, Point::new(0.0, 0.0))?
-            .with_component(Names::Acceleration, acceleration)?
-            .with_component(Names::Mesh, mesh)?
-            .with_component(Names::Marker, EntityTypes::Asteroid.to_string())?
-            .with_component(Names::Size, radius)?;
+            .with_component(Names::Location.to_string(), location)?
+            .with_component(Names::Rotation.to_string(), 0.0_f32)?
+            .with_component(Names::Velocity.to_string(), Point::new(0.0, 0.0))?
+            .with_component(Names::Acceleration.to_string(), acceleration)?
+            .with_component(Names::Mesh.to_string(), mesh)?
+            .with_component(Names::Marker.to_string(), EntityTypes::Asteroid.to_string())?
+            .with_component(Names::Size.to_string(), radius)?;
         Ok(())
     }
 
@@ -160,17 +180,24 @@ impl GameState {
 
 impl EventHandler for GameState {
     fn update(&mut self, context: &mut Context) -> GameResult {
-        let wrapped_update_fps = self.world.get_resource(Names::UpdateFps).unwrap().borrow();
+        let wrapped_update_fps = self
+            .world
+            .get_resource(Names::UpdateFps.to_string())
+            .unwrap()
+            .borrow();
         let update_fps: &u32 = wrapped_update_fps.cast().unwrap();
-        while timer::check_update_time(context, *update_fps) {
+        let update_fps = *update_fps;
+        drop(wrapped_update_fps);
+        while timer::check_update_time(context, update_fps) {
             handle_input_system(&self.world, context)?;
             update_rotation_system(&self.world).unwrap();
             update_acceleration_system(&self.world).unwrap();
             update_movement_system(&self.world).unwrap();
             handle_screen_edges_system(&self.world).unwrap();
-            collide_with_asteroids_system(&self.world).unwrap();
             update_mesh_system(context, &self.world).unwrap();
+            collide_with_asteroids_system(&self.world).unwrap();
             self.world.update().unwrap();
+            create_ship_debris_system(&mut self.world, context, &mut self.random).unwrap();
         }
         Ok(())
     }
@@ -178,7 +205,7 @@ impl EventHandler for GameState {
     fn draw(&mut self, context: &mut Context) -> GameResult {
         let wrapped_background_color = self
             .world
-            .get_resource(Names::BackgroundColor)
+            .get_resource(Names::BackgroundColor.to_string())
             .unwrap()
             .borrow();
         let background_color = wrapped_background_color.cast().unwrap();
@@ -189,7 +216,7 @@ impl EventHandler for GameState {
 
     fn resize_event(&mut self, context: &mut Context, width: f32, height: f32) {
         self.world
-            .add_resource(Names::ArenaSize, Point::new(width, height));
+            .add_resource(Names::ArenaSize.to_string(), Point::new(width, height));
         let screen_size = Rect::new(0.0, 0.0, width, height);
         graphics::set_screen_coordinates(context, screen_size).unwrap()
     }

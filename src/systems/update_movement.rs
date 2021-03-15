@@ -6,9 +6,18 @@ use eyre::Result;
 use crate::helpers::names::Names;
 
 pub fn update_movement_system(world: &World) -> Result<()> {
-    let mut wrapped_accelerations = world.query_one(Names::Acceleration).unwrap().borrow_mut();
-    let mut wrapped_velocities = world.query_one(Names::Velocity).unwrap().borrow_mut();
-    let mut wrapped_locations = world.query_one(Names::Location).unwrap().borrow_mut();
+    let mut wrapped_accelerations = world
+        .query_one(Names::Acceleration.to_string())
+        .unwrap()
+        .borrow_mut();
+    let mut wrapped_velocities = world
+        .query_one(Names::Velocity.to_string())
+        .unwrap()
+        .borrow_mut();
+    let mut wrapped_locations = world
+        .query_one(Names::Location.to_string())
+        .unwrap()
+        .borrow_mut();
     let accelerations: &mut Vec<Point> = wrapped_accelerations.cast_mut()?;
     let velocities: &mut Vec<Point> = wrapped_velocities.cast_mut()?;
     let locations: &mut Vec<Point> = wrapped_locations.cast_mut()?;
