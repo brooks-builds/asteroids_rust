@@ -2,7 +2,6 @@
 pub enum EntityTypes {
     Player,
     Asteroid,
-    Debris,
 }
 
 #[cfg(test)]

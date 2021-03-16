@@ -16,10 +16,10 @@ use helpers::names::Names;
 use rand::prelude::ThreadRng;
 use rand::{random, thread_rng};
 use systems::collide_with_asteroids::collide_with_asteroids_system;
-use systems::create_ship_debris::create_ship_debris_system;
 use systems::draw::draw_system;
 use systems::handle_input::handle_input_system;
 use systems::handle_screen_edges::handle_screen_edges_system;
+use systems::particles;
 use systems::update_acceleration::update_acceleration_system;
 use systems::update_mesh::update_mesh_system;
 use systems::update_movement::update_movement_system;
@@ -27,12 +27,14 @@ use systems::update_rotation::update_rotation_system;
 
 pub struct GameState {
     world: World,
-    random: ThreadRng,
+    rng: ThreadRng,
+    particles_world: World,
 }
 
 impl GameState {
     pub fn new(context: &mut Context) -> GameResult<Self> {
         let mut world = World::new();
+        let mut particles_world = World::new();
         let (width, height) = graphics::drawable_size(context);
         let player_size = 25.0_f32;
         let player_ship_color = WHITE;
@@ -57,6 +59,11 @@ impl GameState {
         world.register(Names::Marker.to_string(), Component::Marker);
         world.register(Names::Size.to_string(), Component::F32);
 
+        particles_world.register(Names::Mesh.to_string(), Component::Mesh);
+        particles_world.register(Names::Velocity.to_string(), Component::Point);
+        particles_world.register(Names::Location.to_string(), Component::Point);
+        particles_world.register(Names::TicksToLive.to_string(), Component::Usize);
+
         world.add_resource(
             Names::BackgroundColor.to_string(),
             Color::new(0.1, 0.1, 0.1, 1.0),
@@ -72,11 +79,10 @@ impl GameState {
         world.add_resource(Names::RotationSpeed.to_string(), 0.1_f32);
         world.add_resource(Names::UpdateFps.to_string(), 60_u32);
         world.add_resource(Names::AsteroidSpeed.to_string(), asteroid_speed);
-        world.add_resource(Names::ShipDestroyed.to_string(), false);
-        world.add_resource(
-            Names::LastKnownPlayerLocation.to_string(),
-            Point::new(0.0, 0.0),
-        );
+
+        particles_world.add_resource(Names::DebrisParticleSpeed.to_string(), 2.0_f32);
+        particles_world.add_resource(Names::DebrisParticleCount.to_string(), 10_u32);
+        particles_world.add_resource(Names::DebrisTicksToLive.to_string(), 180_usize);
 
         Self::create_player(
             &mut world,
@@ -107,7 +113,8 @@ impl GameState {
 
         Ok(Self {
             world,
-            random: thread_rng(),
+            rng: thread_rng(),
+            particles_world,
         })
     }
 
@@ -195,9 +202,17 @@ impl EventHandler for GameState {
             update_movement_system(&self.world).unwrap();
             handle_screen_edges_system(&self.world).unwrap();
             update_mesh_system(context, &self.world).unwrap();
-            collide_with_asteroids_system(&self.world).unwrap();
+            collide_with_asteroids_system(
+                &self.world,
+                &mut self.particles_world,
+                context,
+                &mut self.rng,
+            )
+            .unwrap();
+            particles::update_locations::update_locations_system(&self.particles_world).unwrap();
+            particles::update_life::update_life_system(&self.particles_world).unwrap();
             self.world.update().unwrap();
-            create_ship_debris_system(&mut self.world, context, &mut self.random).unwrap();
+            self.particles_world.update().unwrap();
         }
         Ok(())
     }
@@ -211,6 +226,7 @@ impl EventHandler for GameState {
         let background_color = wrapped_background_color.cast().unwrap();
         graphics::clear(context, *background_color);
         draw_system(context, &self.world).unwrap();
+        particles::draw::draw_system(&self.particles_world, context).unwrap();
         graphics::present(context)
     }
 
