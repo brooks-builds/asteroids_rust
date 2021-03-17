@@ -43,26 +43,56 @@ impl GameState {
         let asteroid_speed = 1.0_f32;
         let player_location = Point::new(width / 2.0, height / 2.0);
         let asteroid_radius = 100.0;
+        let update_fps = 60_u32;
+        let seconds_to_respawn = 3_usize;
+        let debris_seconds_to_live = seconds_to_respawn / 2;
 
-        world.register(
-            Names::Location.to_string(),
-            bbecs::components::Component::Point,
-        );
-        world.register(
-            Names::Thrusting.to_string(),
-            bbecs::components::Component::Bool,
-        );
-        world.register(Names::Rotation.to_string(), Component::F32);
-        world.register(Names::Acceleration.to_string(), Component::Point);
-        world.register(Names::Velocity.to_string(), Component::Point);
-        world.register(Names::Mesh.to_string(), Component::Mesh);
-        world.register(Names::Marker.to_string(), Component::Marker);
-        world.register(Names::Size.to_string(), Component::F32);
+        world
+            .register(
+                Names::Location.to_string(),
+                bbecs::components::Component::Point,
+            )
+            .unwrap();
+        world
+            .register(
+                Names::Thrusting.to_string(),
+                bbecs::components::Component::Bool,
+            )
+            .unwrap();
+        world
+            .register(Names::Rotation.to_string(), Component::F32)
+            .unwrap();
+        world
+            .register(Names::Acceleration.to_string(), Component::Point)
+            .unwrap();
+        world
+            .register(Names::Velocity.to_string(), Component::Point)
+            .unwrap();
+        world
+            .register(Names::Mesh.to_string(), Component::Mesh)
+            .unwrap();
+        world
+            .register(Names::Marker.to_string(), Component::Marker)
+            .unwrap();
+        world
+            .register(Names::Size.to_string(), Component::F32)
+            .unwrap();
 
-        particles_world.register(Names::Mesh.to_string(), Component::Mesh);
-        particles_world.register(Names::Velocity.to_string(), Component::Point);
-        particles_world.register(Names::Location.to_string(), Component::Point);
-        particles_world.register(Names::TicksToLive.to_string(), Component::Usize);
+        particles_world
+            .register(Names::Mesh.to_string(), Component::Mesh)
+            .unwrap();
+        particles_world
+            .register(Names::Velocity.to_string(), Component::Point)
+            .unwrap();
+        particles_world
+            .register(Names::Location.to_string(), Component::Point)
+            .unwrap();
+        particles_world
+            .register(Names::TicksToLive.to_string(), Component::Usize)
+            .unwrap();
+        particles_world
+            .register(Names::DebrisColor.to_string(), Component::Color)
+            .unwrap();
 
         world.add_resource(
             Names::BackgroundColor.to_string(),
@@ -77,12 +107,21 @@ impl GameState {
         world.add_resource(Names::RotateLeftKeyCode.to_string(), KeyCode::Left);
         world.add_resource(Names::RotateRightKeyCode.to_string(), KeyCode::Right);
         world.add_resource(Names::RotationSpeed.to_string(), 0.1_f32);
-        world.add_resource(Names::UpdateFps.to_string(), 60_u32);
+        world.add_resource(Names::UpdateFps.to_string(), update_fps);
         world.add_resource(Names::AsteroidSpeed.to_string(), asteroid_speed);
+        world.add_resource(Names::SpawnPlayerIn.to_string(), 0_usize);
+        world.add_resource(
+            Names::SpawnTime.to_string(),
+            seconds_to_respawn * update_fps as usize,
+        );
 
         particles_world.add_resource(Names::DebrisParticleSpeed.to_string(), 2.0_f32);
-        particles_world.add_resource(Names::DebrisParticleCount.to_string(), 10_u32);
-        particles_world.add_resource(Names::DebrisTicksToLive.to_string(), 180_usize);
+        particles_world.add_resource(Names::DebrisParticleCount.to_string(), 40_u32);
+        particles_world.add_resource(
+            Names::DebrisTicksToLive.to_string(),
+            debris_seconds_to_live * update_fps as usize,
+        );
+        particles_world.add_resource(Names::DebrisSize.to_string(), 2.0_f32);
 
         Self::create_player(
             &mut world,
@@ -211,6 +250,7 @@ impl EventHandler for GameState {
             .unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
             particles::update_life::update_life_system(&self.particles_world).unwrap();
+            particles::fade_debris_system::fade_debris_system(&self.particles_world).unwrap();
             self.world.update().unwrap();
             self.particles_world.update().unwrap();
         }
