@@ -10,6 +10,7 @@ use ggez::event::{EventHandler, KeyCode};
 use ggez::graphics::{Color, Mesh, Rect, WHITE};
 use ggez::{graphics, timer, Context, GameResult};
 use helpers::create_asteroid::create_asteroid_mesh;
+use helpers::create_message::create_message;
 use helpers::create_player_ship::create_player_ship;
 use helpers::entity_types::EntityTypes;
 use helpers::names::Names;
@@ -77,6 +78,9 @@ impl GameState {
         world
             .register(Names::Size.to_string(), Component::F32)
             .unwrap();
+        world
+            .register(Names::Message.to_string(), Component::GgezText)
+            .unwrap();
 
         particles_world
             .register(Names::Mesh.to_string(), Component::Mesh)
@@ -114,6 +118,7 @@ impl GameState {
             Names::SpawnTime.to_string(),
             seconds_to_respawn * update_fps as usize,
         );
+        world.add_resource(Names::LivesRemaining.to_string(), 3_u32);
 
         particles_world.add_resource(Names::DebrisParticleSpeed.to_string(), 2.0_f32);
         particles_world.add_resource(Names::DebrisParticleCount.to_string(), 40_u32);
@@ -121,21 +126,29 @@ impl GameState {
             Names::DebrisTicksToLive.to_string(),
             debris_seconds_to_live * update_fps as usize,
         );
-        particles_world.add_resource(Names::DebrisSize.to_string(), 2.0_f32);
+        particles_world.add_resource(Names::DebrisSize.to_string(), 3.0_f32);
 
-        Self::create_player(
+        // Self::create_player(
+        //     &mut world,
+        //     create_player_ship(
+        //         context,
+        //         player_size,
+        //         player_ship_color,
+        //         is_thrusting,
+        //         thruster_color,
+        //     )?,
+        //     player_size,
+        //     player_location,
+        // )
+        // .expect("error creating player");
+
+        Self::insert_message_into_world(
+            "Press Enter to start game",
             &mut world,
-            create_player_ship(
-                context,
-                player_size,
-                player_ship_color,
-                is_thrusting,
-                thruster_color,
-            )?,
-            player_size,
-            player_location,
+            (width, height),
+            context,
         )
-        .expect("error creating player");
+        .unwrap();
 
         for _ in 0..5 {
             Self::create_asteroid(
@@ -221,6 +234,25 @@ impl GameState {
         }
 
         location
+    }
+
+    fn insert_message_into_world(
+        message: &str,
+        world: &mut World,
+        screen_size: (f32, f32),
+        context: &mut Context,
+    ) -> Result<()> {
+        let text = create_message(message);
+        let location = Point::new(
+            screen_size.0 / 2.0 - text.width(context) as f32 / 2.0,
+            screen_size.1 / 2.0 - text.height(context) as f32 / 2.0,
+        );
+        world
+            .spawn_entity()?
+            .with_component(Names::Location.to_string(), location)?
+            .with_component(Names::Marker.to_string(), EntityTypes::Message.to_string())?
+            .with_component(Names::Message.to_string(), text)?;
+        Ok(())
     }
 }
 
