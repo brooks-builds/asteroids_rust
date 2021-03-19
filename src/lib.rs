@@ -50,52 +50,52 @@ impl GameState {
 
         world
             .register(
-                Names::Location.to_string(),
+                &Names::Location.to_string(),
                 bbecs::components::Component::Point,
             )
             .unwrap();
         world
             .register(
-                Names::Thrusting.to_string(),
+                &Names::Thrusting.to_string(),
                 bbecs::components::Component::Bool,
             )
             .unwrap();
         world
-            .register(Names::Rotation.to_string(), Component::F32)
+            .register(&Names::Rotation.to_string(), Component::F32)
             .unwrap();
         world
-            .register(Names::Acceleration.to_string(), Component::Point)
+            .register(&Names::Acceleration.to_string(), Component::Point)
             .unwrap();
         world
-            .register(Names::Velocity.to_string(), Component::Point)
+            .register(&Names::Velocity.to_string(), Component::Point)
             .unwrap();
         world
-            .register(Names::Mesh.to_string(), Component::Mesh)
+            .register(&Names::Mesh.to_string(), Component::Mesh)
             .unwrap();
         world
-            .register(Names::Marker.to_string(), Component::Marker)
+            .register(&Names::Marker.to_string(), Component::Marker)
             .unwrap();
         world
-            .register(Names::Size.to_string(), Component::F32)
+            .register(&Names::Size.to_string(), Component::F32)
             .unwrap();
         world
-            .register(Names::Message.to_string(), Component::GgezText)
+            .register(&Names::Message.to_string(), Component::GgezText)
             .unwrap();
 
         particles_world
-            .register(Names::Mesh.to_string(), Component::Mesh)
+            .register(&Names::Mesh.to_string(), Component::Mesh)
             .unwrap();
         particles_world
-            .register(Names::Velocity.to_string(), Component::Point)
+            .register(&Names::Velocity.to_string(), Component::Point)
             .unwrap();
         particles_world
-            .register(Names::Location.to_string(), Component::Point)
+            .register(&Names::Location.to_string(), Component::Point)
             .unwrap();
         particles_world
-            .register(Names::TicksToLive.to_string(), Component::Usize)
+            .register(&Names::TicksToLive.to_string(), Component::Usize)
             .unwrap();
         particles_world
-            .register(Names::DebrisColor.to_string(), Component::Color)
+            .register(&Names::DebrisColor.to_string(), Component::Color)
             .unwrap();
 
         world.add_resource(
@@ -128,27 +128,27 @@ impl GameState {
         );
         particles_world.add_resource(Names::DebrisSize.to_string(), 3.0_f32);
 
-        // Self::create_player(
-        //     &mut world,
-        //     create_player_ship(
-        //         context,
-        //         player_size,
-        //         player_ship_color,
-        //         is_thrusting,
-        //         thruster_color,
-        //     )?,
-        //     player_size,
-        //     player_location,
-        // )
-        // .expect("error creating player");
-
-        Self::insert_message_into_world(
-            "Press Enter to start game",
+        Self::create_player(
             &mut world,
-            (width, height),
-            context,
+            create_player_ship(
+                context,
+                player_size,
+                player_ship_color,
+                is_thrusting,
+                thruster_color,
+            )?,
+            player_size,
+            player_location,
         )
-        .unwrap();
+        .expect("error creating player");
+
+        // Self::insert_message_into_world(
+        //     "Press Enter to start game",
+        //     &mut world,
+        //     (width, height),
+        //     context,
+        // )
+        // .unwrap();
 
         for _ in 0..5 {
             Self::create_asteroid(
@@ -178,13 +178,13 @@ impl GameState {
     ) -> Result<()> {
         world
             .spawn_entity()?
-            .with_component(Names::Location.to_string(), location)?
-            .with_component(Names::Rotation.to_string(), 0.0_f32)?
-            .with_component(Names::Velocity.to_string(), Point::new(0.0, 0.0))?
-            .with_component(Names::Acceleration.to_string(), Point::new(0.0, 0.0))?
-            .with_component(Names::Mesh.to_string(), player_ship)?
-            .with_component(Names::Marker.to_string(), EntityTypes::Player.to_string())?
-            .with_component(Names::Size.to_string(), size)?;
+            .with_component(&Names::Location.to_string(), location)?
+            .with_component(&Names::Rotation.to_string(), 0.0_f32)?
+            .with_component(&Names::Velocity.to_string(), Point::new(0.0, 0.0))?
+            .with_component(&Names::Acceleration.to_string(), Point::new(0.0, 0.0))?
+            .with_component(&Names::Mesh.to_string(), player_ship)?
+            .with_component(&Names::Marker.to_string(), EntityTypes::Player.to_string())?
+            .with_component(&Names::Size.to_string(), size)?;
         Ok(())
     }
 
@@ -206,13 +206,16 @@ impl GameState {
 
         world
             .spawn_entity()?
-            .with_component(Names::Location.to_string(), location)?
-            .with_component(Names::Rotation.to_string(), 0.0_f32)?
-            .with_component(Names::Velocity.to_string(), Point::new(0.0, 0.0))?
-            .with_component(Names::Acceleration.to_string(), acceleration)?
-            .with_component(Names::Mesh.to_string(), mesh)?
-            .with_component(Names::Marker.to_string(), EntityTypes::Asteroid.to_string())?
-            .with_component(Names::Size.to_string(), radius)?;
+            .with_component(&Names::Location.to_string(), location)?
+            .with_component(&Names::Rotation.to_string(), 0.0_f32)?
+            .with_component(&Names::Velocity.to_string(), Point::new(0.0, 0.0))?
+            .with_component(&Names::Acceleration.to_string(), acceleration)?
+            .with_component(&Names::Mesh.to_string(), mesh)?
+            .with_component(
+                &Names::Marker.to_string(),
+                EntityTypes::Asteroid.to_string(),
+            )?
+            .with_component(&Names::Size.to_string(), radius)?;
         Ok(())
     }
 
@@ -249,9 +252,9 @@ impl GameState {
         );
         world
             .spawn_entity()?
-            .with_component(Names::Location.to_string(), location)?
-            .with_component(Names::Marker.to_string(), EntityTypes::Message.to_string())?
-            .with_component(Names::Message.to_string(), text)?;
+            .with_component(&Names::Location.to_string(), location)?
+            .with_component(&Names::Marker.to_string(), EntityTypes::Message.to_string())?
+            .with_component(&Names::Message.to_string(), text)?;
         Ok(())
     }
 }
@@ -260,7 +263,7 @@ impl EventHandler for GameState {
     fn update(&mut self, context: &mut Context) -> GameResult {
         let wrapped_update_fps = self
             .world
-            .get_resource(Names::UpdateFps.to_string())
+            .get_resource(&Names::UpdateFps.to_string())
             .unwrap()
             .borrow();
         let update_fps: &u32 = wrapped_update_fps.cast().unwrap();
@@ -292,7 +295,7 @@ impl EventHandler for GameState {
     fn draw(&mut self, context: &mut Context) -> GameResult {
         let wrapped_background_color = self
             .world
-            .get_resource(Names::BackgroundColor.to_string())
+            .get_resource(&Names::BackgroundColor.to_string())
             .unwrap()
             .borrow();
         let background_color = wrapped_background_color.cast().unwrap();

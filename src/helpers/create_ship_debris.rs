@@ -45,12 +45,12 @@ pub fn create_ship_debris(
 
         particles_world
             .spawn_entity()?
-            .with_component(Names::Mesh.to_string(), debris_mesh.clone())?
-            .with_component(Names::Velocity.to_string(), velocity)?
-            .with_component(Names::Location.to_string(), location)?
-            .with_component(Names::TicksToLive.to_string(), ticks_to_live)?
+            .with_component(&Names::Mesh.to_string(), debris_mesh.clone())?
+            .with_component(&Names::Velocity.to_string(), velocity)?
+            .with_component(&Names::Location.to_string(), location)?
+            .with_component(&Names::TicksToLive.to_string(), ticks_to_live)?
             .with_component(
-                Names::DebrisColor.to_string(),
+                &Names::DebrisColor.to_string(),
                 Color::new(1.0, 1.0, 1.0, 1.0),
             )?;
     }
