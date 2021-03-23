@@ -48,54 +48,28 @@ impl GameState {
         let seconds_to_respawn = 3_usize;
         let debris_seconds_to_live = seconds_to_respawn / 2;
 
-        world
-            .register(
-                &Names::Location.to_string(),
-                bbecs::components::Component::Point,
-            )
-            .unwrap();
-        world
-            .register(
-                &Names::Thrusting.to_string(),
-                bbecs::components::Component::Bool,
-            )
-            .unwrap();
-        world
-            .register(&Names::Rotation.to_string(), Component::F32)
-            .unwrap();
-        world
-            .register(&Names::Acceleration.to_string(), Component::Point)
-            .unwrap();
-        world
-            .register(&Names::Velocity.to_string(), Component::Point)
-            .unwrap();
-        world
-            .register(&Names::Mesh.to_string(), Component::Mesh)
-            .unwrap();
-        world
-            .register(&Names::Marker.to_string(), Component::Marker)
-            .unwrap();
-        world
-            .register(&Names::Size.to_string(), Component::F32)
-            .unwrap();
-        world
-            .register(&Names::Message.to_string(), Component::GgezText)
-            .unwrap();
+        world.register(&Names::Location.to_string()).unwrap();
+        world.register(&Names::Thrusting.to_string()).unwrap();
+        world.register(&Names::Rotation.to_string()).unwrap();
+        world.register(&Names::Acceleration.to_string()).unwrap();
+        world.register(&Names::Velocity.to_string()).unwrap();
+        world.register(&Names::Mesh.to_string()).unwrap();
+        world.register(&Names::Marker.to_string()).unwrap();
+        world.register(&Names::Size.to_string()).unwrap();
+        world.register(&Names::Message.to_string()).unwrap();
 
+        particles_world.register(&Names::Mesh.to_string()).unwrap();
         particles_world
-            .register(&Names::Mesh.to_string(), Component::Mesh)
+            .register(&Names::Velocity.to_string())
             .unwrap();
         particles_world
-            .register(&Names::Velocity.to_string(), Component::Point)
+            .register(&Names::Location.to_string())
             .unwrap();
         particles_world
-            .register(&Names::Location.to_string(), Component::Point)
+            .register(&Names::TicksToLive.to_string())
             .unwrap();
         particles_world
-            .register(&Names::TicksToLive.to_string(), Component::Usize)
-            .unwrap();
-        particles_world
-            .register(&Names::DebrisColor.to_string(), Component::Color)
+            .register(&Names::DebrisColor.to_string())
             .unwrap();
 
         world.add_resource(
