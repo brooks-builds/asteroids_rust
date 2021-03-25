@@ -6,7 +6,7 @@ use ggez::graphics::{Color, Mesh};
 use ggez::Context;
 
 use crate::helpers::create_player_ship::create_player_ship;
-use crate::helpers::get_player_index::get_player_index;
+use crate::helpers::get_player_id::get_player_index;
 use crate::helpers::names::Names;
 
 pub fn update_mesh_system(context: &mut Context, world: &World) -> Result<()> {

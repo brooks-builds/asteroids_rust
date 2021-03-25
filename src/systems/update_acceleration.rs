@@ -4,7 +4,7 @@ use bbecs::resources::resource::ResourceCast;
 use bbecs::world::World;
 use eyre::Result;
 
-use crate::helpers::get_player_index::get_player_index;
+use crate::helpers::get_player_id::get_player_index;
 use crate::helpers::names::Names;
 
 pub fn update_acceleration_system(world: &World) -> Result<()> {

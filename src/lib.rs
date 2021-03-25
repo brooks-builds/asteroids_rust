@@ -1,7 +1,6 @@
 mod helpers;
 mod systems;
 
-use bbecs::components::Component;
 use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
 use bbecs::world::{World, WorldMethods};
@@ -181,7 +180,6 @@ impl GameState {
         world
             .spawn_entity()?
             .with_component(&Names::Location.to_string(), location)?
-            .with_component(&Names::Rotation.to_string(), 0.0_f32)?
             .with_component(&Names::Velocity.to_string(), Point::new(0.0, 0.0))?
             .with_component(&Names::Acceleration.to_string(), acceleration)?
             .with_component(&Names::Mesh.to_string(), mesh)?

@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
 use bbecs::world::World;
@@ -8,27 +11,25 @@ use ggez::Context;
 use crate::helpers::names::Names;
 
 pub fn draw_system(particles_world: &World, context: &mut Context) -> Result<()> {
-    let wrapped_meshes = particles_world.query_one(Names::Mesh.to_string())?.borrow();
-    let wrapped_locations = particles_world
-        .query_one(Names::Location.to_string())?
-        .borrow();
-    let wrapped_colors = particles_world
-        .query_one(Names::DebrisColor.to_string())?
-        .borrow();
+    let query = particles_world.query(vec![
+        &Names::Mesh.to_string(),
+        &Names::Location.to_string(),
+        &Names::DebrisColor.to_string(),
+    ])?;
+    let mesh_query = query[0];
+    let location_query = query[1];
+    let color_query = query[2];
 
-    let meshes: &Vec<Mesh> = wrapped_meshes.cast()?;
-    let locations: &Vec<Point> = wrapped_locations.cast()?;
-    let colors: &Vec<Color> = wrapped_colors.cast()?;
+    for (index, location) in location_query.iter().enumerate() {
+        let location: &Rc<RefCell<Point>> = location.cast()?;
+        let location = location.borrow();
+        let mesh: &Rc<RefCell<Mesh>> = mesh_query[index].cast()?;
+        let mesh = *mesh.borrow();
+        let color: &Rc<RefCell<Color>> = color_query[index].cast()?;
+        let color = color.borrow();
 
-    locations.iter().enumerate().for_each(|(index, location)| {
-        graphics::draw(
-            context,
-            &meshes[index],
-            DrawParam::new()
-                .dest(location.to_array())
-                .color(colors[index]),
-        )
-        .unwrap();
-    });
+        graphics::draw(context, &mesh, DrawParam::new().color(*color))?;
+    }
+
     Ok(())
 }

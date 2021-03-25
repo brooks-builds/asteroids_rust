@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use bbecs::components::CastComponents;
 use bbecs::resources::resource::ResourceCast;
 use bbecs::world::World;
@@ -7,18 +10,19 @@ use ggez::graphics::Color;
 use crate::helpers::names::Names;
 
 pub fn fade_debris_system(particles_world: &World) -> Result<()> {
-    let mut wrapped_debris_colors = particles_world
-        .query_one(Names::DebrisColor.to_string())?
-        .borrow_mut();
-    let debris_color: &mut Vec<Color> = wrapped_debris_colors.cast_mut()?;
+    let query = particles_world.query(vec![&Names::DebrisColor.to_string()])?;
+    let debris_color_query = query[0];
     let wrapped_ticks_to_live = particles_world
         .get_resource(Names::DebrisTicksToLive.to_string())?
         .borrow();
     let ticks_to_live: &usize = wrapped_ticks_to_live.cast()?;
 
-    debris_color.iter_mut().for_each(|color| {
-        color.a -= 1.0 / *ticks_to_live as f32;
-    });
+    for debris_color in debris_color_query {
+        let debris_color: &Rc<RefCell<Color>> = debris_color.cast()?;
+        let mut debris_color = debris_color.borrow_mut();
+
+        debris_color.a -= 1.0 / *ticks_to_live as f32;
+    }
 
     Ok(())
 }

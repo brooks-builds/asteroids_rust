@@ -5,7 +5,7 @@ use ggez::event::KeyCode;
 use ggez::input::keyboard;
 use ggez::{Context, GameResult};
 
-use crate::helpers::get_player_index::get_player_index;
+use crate::helpers::get_player_id::get_player_index;
 use crate::helpers::names::Names;
 
 pub fn handle_input_system(world: &World, context: &mut Context) -> GameResult {
