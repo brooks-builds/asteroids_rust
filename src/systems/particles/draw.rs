@@ -16,19 +16,23 @@ pub fn draw_system(particles_world: &World, context: &mut Context) -> Result<()>
         &Names::Location.to_string(),
         &Names::DebrisColor.to_string(),
     ])?;
-    let mesh_query = query[0];
-    let location_query = query[1];
-    let color_query = query[2];
+    let mesh_query = &query[0];
+    let location_query = &query[1];
+    let color_query = &query[2];
 
     for (index, location) in location_query.iter().enumerate() {
         let location: &Rc<RefCell<Point>> = location.cast()?;
         let location = location.borrow();
         let mesh: &Rc<RefCell<Mesh>> = mesh_query[index].cast()?;
-        let mesh = *mesh.borrow();
+        let mesh = mesh.borrow();
         let color: &Rc<RefCell<Color>> = color_query[index].cast()?;
         let color = color.borrow();
 
-        graphics::draw(context, &mesh, DrawParam::new().color(*color))?;
+        graphics::draw(
+            context,
+            &*mesh,
+            DrawParam::new().color(*color).dest(location.to_array()),
+        )?;
     }
 
     Ok(())

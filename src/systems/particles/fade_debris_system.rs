@@ -11,7 +11,7 @@ use crate::helpers::names::Names;
 
 pub fn fade_debris_system(particles_world: &World) -> Result<()> {
     let query = particles_world.query(vec![&Names::DebrisColor.to_string()])?;
-    let debris_color_query = query[0];
+    let debris_color_query = &query[0];
     let wrapped_ticks_to_live = particles_world
         .get_resource(Names::DebrisTicksToLive.to_string())?
         .borrow();

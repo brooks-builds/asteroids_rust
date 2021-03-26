@@ -1,6 +1,6 @@
 use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
-use bbecs::world::World;
+use bbecs::world::{DataWrapper, World};
 use eyre::Result;
 use ggez::graphics::{DrawParam, Mesh};
 use ggez::{graphics, Context};
@@ -8,32 +8,27 @@ use ggez::{graphics, Context};
 use crate::helpers::names::Names;
 
 pub fn draw_system(context: &mut Context, world: &World) -> Result<()> {
-    let wrapped_locations = world
-        .query_one(Names::Location.to_string())
-        .unwrap()
-        .borrow();
-    let locations: &Vec<Point> = wrapped_locations.cast()?;
-    let wrapped_rotations = world
-        .query_one(Names::Rotation.to_string())
-        .unwrap()
-        .borrow();
-    let rotations: &Vec<f32> = wrapped_rotations.cast()?;
-    let wrapped_meshes = world
-        .query_one(Names::Mesh.to_string())
-        .expect("querying for meshes")
-        .borrow();
-    let meshes: &Vec<Mesh> = wrapped_meshes.cast()?;
+    let query = world.query(vec![
+        &Names::Location.to_string(),
+        &Names::Rotation.to_string(),
+        &Names::Mesh.to_string(),
+    ])?;
+    let locations = &query[0];
+    let rotations = &query[1];
+    let meshes = &query[2];
 
-    meshes.iter().enumerate().for_each(|(index, mesh)| {
+    for (index, location) in locations.iter().enumerate() {
+        let location: &DataWrapper<Point> = location.cast()?;
+        let rotation: &DataWrapper<f32> = rotations[index].cast()?;
+        let mesh: &DataWrapper<Mesh> = meshes[index].cast()?;
+
         graphics::draw(
             context,
-            mesh,
+            &*mesh.borrow(),
             DrawParam::new()
-                .dest(locations[index].to_array())
-                .rotation(rotations[index]),
-        )
-        .unwrap();
-    });
-
+                .rotation(*rotation.borrow())
+                .dest(location.borrow().to_array()),
+        )?;
+    }
     Ok(())
 }

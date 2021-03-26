@@ -9,8 +9,8 @@ use eyre::Result;
 
 pub fn get_player_id(world: &World) -> Result<Option<u32>> {
     let queries = world.query(vec![&Names::Marker.to_string(), ENTITY_ID])?;
-    let marker_query = queries[0];
-    let id_query = queries[1];
+    let marker_query = &queries[0];
+    let id_query = &queries[1];
 
     for (index, component) in marker_query.iter().enumerate() {
         let wrapped_marker: &Rc<RefCell<String>> = component.cast()?;

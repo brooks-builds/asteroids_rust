@@ -1,3 +1,4 @@
+mod errors;
 mod helpers;
 mod systems;
 
@@ -23,7 +24,6 @@ use systems::particles;
 use systems::update_acceleration::update_acceleration_system;
 use systems::update_mesh::update_mesh_system;
 use systems::update_movement::update_movement_system;
-use systems::update_rotation::update_rotation_system;
 
 pub struct GameState {
     world: World,
@@ -183,6 +183,7 @@ impl GameState {
             .with_component(&Names::Velocity.to_string(), Point::new(0.0, 0.0))?
             .with_component(&Names::Acceleration.to_string(), acceleration)?
             .with_component(&Names::Mesh.to_string(), mesh)?
+            .with_component(&Names::Rotation.to_string(), 0.0_f32)?
             .with_component(
                 &Names::Marker.to_string(),
                 EntityTypes::Asteroid.to_string(),
@@ -242,8 +243,7 @@ impl EventHandler for GameState {
         let update_fps = *update_fps;
         drop(wrapped_update_fps);
         while timer::check_update_time(context, update_fps) {
-            handle_input_system(&self.world, context)?;
-            update_rotation_system(&self.world).unwrap();
+            handle_input_system(&self.world, context).unwrap();
             update_acceleration_system(&self.world).unwrap();
             update_movement_system(&self.world).unwrap();
             handle_screen_edges_system(&self.world).unwrap();

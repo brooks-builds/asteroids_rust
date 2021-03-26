@@ -5,4 +5,5 @@ pub mod create_player_ship;
 pub mod create_ship_debris;
 pub mod entity_types;
 pub mod get_player_id;
+pub mod get_player_index;
 pub mod names;

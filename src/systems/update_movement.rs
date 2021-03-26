@@ -1,35 +1,31 @@
 use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
-use bbecs::world::World;
+use bbecs::world::{DataWrapper, World};
 use eyre::Result;
 
 use crate::helpers::names::Names;
 
 pub fn update_movement_system(world: &World) -> Result<()> {
-    let mut wrapped_accelerations = world
-        .query_one(Names::Acceleration.to_string())
-        .unwrap()
-        .borrow_mut();
-    let mut wrapped_velocities = world
-        .query_one(Names::Velocity.to_string())
-        .unwrap()
-        .borrow_mut();
-    let mut wrapped_locations = world
-        .query_one(Names::Location.to_string())
-        .unwrap()
-        .borrow_mut();
-    let accelerations: &mut Vec<Point> = wrapped_accelerations.cast_mut()?;
-    let velocities: &mut Vec<Point> = wrapped_velocities.cast_mut()?;
-    let locations: &mut Vec<Point> = wrapped_locations.cast_mut()?;
+    let queries = world.query(vec![
+        &Names::Acceleration.to_string(),
+        &Names::Velocity.to_string(),
+        &Names::Location.to_string(),
+    ])?;
+    let accelerations = &queries[0];
+    let velocities = &queries[1];
+    let locations = &queries[2];
 
-    locations
-        .iter_mut()
-        .enumerate()
-        .for_each(|(index, location)| {
-            velocities[index].add(&accelerations[index]);
-            location.add(&velocities[index]);
-            accelerations[index].multiply_scalar(0.0);
-        });
+    for (index, location) in locations.iter().enumerate() {
+        let location: &DataWrapper<Point> = location.cast()?;
+        let mut location = location.borrow_mut();
+        let acceleration: &DataWrapper<Point> = accelerations[index].cast()?;
+        let mut acceleration = acceleration.borrow_mut();
+        let velocity: &DataWrapper<Point> = velocities[index].cast()?;
+        let mut velocity = velocity.borrow_mut();
+        *velocity += *acceleration;
+        *location += *velocity;
+        acceleration.multiply_scalar(0.0);
+    }
 
     Ok(())
 }
