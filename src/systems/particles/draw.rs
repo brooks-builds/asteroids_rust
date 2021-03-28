@@ -16,9 +16,9 @@ pub fn draw_system(particles_world: &World, context: &mut Context) -> Result<()>
         &Names::Location.to_string(),
         &Names::DebrisColor.to_string(),
     ])?;
-    let mesh_query = &query[0];
-    let location_query = &query[1];
-    let color_query = &query[2];
+    let mesh_query = query.get(&Names::Mesh.to_string()).unwrap();
+    let location_query = query.get(&Names::Location.to_string()).unwrap();
+    let color_query = query.get(&Names::DebrisColor.to_string()).unwrap();
 
     for (index, location) in location_query.iter().enumerate() {
         let location: &Rc<RefCell<Point>> = location.cast()?;

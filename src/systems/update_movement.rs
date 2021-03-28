@@ -11,9 +11,9 @@ pub fn update_movement_system(world: &World) -> Result<()> {
         &Names::Velocity.to_string(),
         &Names::Location.to_string(),
     ])?;
-    let accelerations = &queries[0];
-    let velocities = &queries[1];
-    let locations = &queries[2];
+    let accelerations = queries.get(&Names::Acceleration.to_string()).unwrap();
+    let velocities = queries.get(&Names::Velocity.to_string()).unwrap();
+    let locations = queries.get(&Names::Location.to_string()).unwrap();
 
     for (index, location) in locations.iter().enumerate() {
         let location: &DataWrapper<Point> = location.cast()?;

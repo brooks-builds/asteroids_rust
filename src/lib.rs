@@ -2,22 +2,29 @@ mod errors;
 mod helpers;
 mod systems;
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
-use bbecs::world::{World, WorldMethods};
+use bbecs::world::{DataWrapper, World, WorldMethods, ENTITY_ID};
 use eyre::Result;
 use ggez::event::{EventHandler, KeyCode};
+use ggez::graphics::pipe::Data;
 use ggez::graphics::{Color, Mesh, Rect, WHITE};
 use ggez::{graphics, timer, Context, GameResult};
 use helpers::create_asteroid::create_asteroid_mesh;
 use helpers::create_message::create_message;
 use helpers::create_player_ship::create_player_ship;
 use helpers::entity_types::EntityTypes;
+use helpers::get_player_id::get_player_id;
 use helpers::names::Names;
 use rand::prelude::ThreadRng;
 use rand::{random, thread_rng};
 use systems::collide_with_asteroids::collide_with_asteroids_system;
 use systems::draw::draw_system;
+use systems::draw_message::draw_message_system;
 use systems::handle_input::handle_input_system;
 use systems::handle_screen_edges::handle_screen_edges_system;
 use systems::particles;
@@ -92,6 +99,7 @@ impl GameState {
             seconds_to_respawn * update_fps as usize,
         );
         world.add_resource(Names::LivesRemaining.to_string(), 3_u32);
+        world.add_resource(Names::PlayerSize.to_string(), player_size);
 
         particles_world.add_resource(Names::DebrisParticleSpeed.to_string(), 2.0_f32);
         particles_world.add_resource(Names::DebrisParticleCount.to_string(), 40_u32);
@@ -101,29 +109,29 @@ impl GameState {
         );
         particles_world.add_resource(Names::DebrisSize.to_string(), 3.0_f32);
 
-        Self::create_player(
-            &mut world,
-            create_player_ship(
-                context,
-                player_size,
-                player_ship_color,
-                is_thrusting,
-                thruster_color,
-            )?,
-            player_size,
-            player_location,
-        )
-        .expect("error creating player");
-
-        // Self::insert_message_into_world(
-        //     "Press Enter to start game",
+        // Self::create_player(
         //     &mut world,
-        //     (width, height),
-        //     context,
+        //     create_player_ship(
+        //         context,
+        //         player_size,
+        //         player_ship_color,
+        //         is_thrusting,
+        //         thruster_color,
+        //     )?,
+        //     player_size,
+        //     player_location,
         // )
-        // .unwrap();
+        // .expect("error creating player");
 
-        for _ in 0..5 {
+        Self::insert_message_into_world(
+            "Press Enter to start game",
+            &mut world,
+            (width, height),
+            context,
+        )
+        .unwrap();
+
+        for _ in 0..1 {
             Self::create_asteroid(
                 &mut world,
                 asteroid_radius,
@@ -249,7 +257,7 @@ impl EventHandler for GameState {
             handle_screen_edges_system(&self.world).unwrap();
             update_mesh_system(context, &self.world).unwrap();
             collide_with_asteroids_system(
-                &self.world,
+                &mut self.world,
                 &mut self.particles_world,
                 context,
                 &mut self.rng,
@@ -274,6 +282,7 @@ impl EventHandler for GameState {
         graphics::clear(context, *background_color);
         draw_system(context, &self.world).unwrap();
         particles::draw::draw_system(&self.particles_world, context).unwrap();
+        draw_message_system(&self.world, context).unwrap();
         graphics::present(context)
     }
 
@@ -282,5 +291,61 @@ impl EventHandler for GameState {
             .add_resource(Names::ArenaSize.to_string(), Point::new(width, height));
         let screen_size = Rect::new(0.0, 0.0, width, height);
         graphics::set_screen_coordinates(context, screen_size).unwrap()
+    }
+
+    fn key_down_event(
+        &mut self,
+        context: &mut Context,
+        keycode: KeyCode,
+        _keymods: ggez::event::KeyMods,
+        _repeat: bool,
+    ) {
+        if let None = get_player_id(&self.world).unwrap() {
+            if keycode == KeyCode::Return {
+                let wrapped_player_size = self
+                    .world
+                    .get_resource(&Names::PlayerSize.to_string())
+                    .unwrap()
+                    .borrow();
+                let player_size: f32 = *wrapped_player_size.cast().unwrap();
+                let wrapped_player_ship_color = self
+                    .world
+                    .get_resource(&Names::PlayerShipColor.to_string())
+                    .unwrap()
+                    .borrow();
+                let player_ship_color: &Color = wrapped_player_ship_color.cast().unwrap();
+                let wrapped_thruster_color = self
+                    .world
+                    .get_resource(&Names::ThrusterColor.to_string())
+                    .unwrap()
+                    .borrow();
+                let thruster_color: &Color = wrapped_thruster_color.cast().unwrap();
+                let query = self
+                    .world
+                    .query(vec![&Names::Message.to_string(), ENTITY_ID])
+                    .unwrap();
+                let ids = query.get(ENTITY_ID).unwrap();
+                for id in ids {
+                    let id: &DataWrapper<u32> = id.cast().unwrap();
+                    self.world.delete_by_id(*id.borrow()).unwrap();
+                }
+
+                let player_ship = create_player_ship(
+                    context,
+                    player_size,
+                    *player_ship_color,
+                    false,
+                    *thruster_color,
+                )
+                .unwrap();
+                let (width, height) = graphics::drawable_size(context);
+                let player_location = Point::new(width / 2.0, height / 2.0);
+                drop(wrapped_player_ship_color);
+                drop(wrapped_player_size);
+                drop(wrapped_thruster_color);
+                Self::create_player(&mut self.world, player_ship, player_size, player_location)
+                    .unwrap();
+            }
+        }
     }
 }

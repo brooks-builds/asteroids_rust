@@ -1,5 +1,6 @@
 pub mod collide_with_asteroids;
 pub mod draw;
+pub mod draw_message;
 pub mod handle_input;
 pub mod handle_screen_edges;
 pub mod particles;

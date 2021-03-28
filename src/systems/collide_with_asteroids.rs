@@ -2,9 +2,10 @@ use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
 use bbecs::world::{DataWrapper, World, ENTITY_ID};
 use eyre::Result;
-use ggez::Context;
+use ggez::{graphics, Context};
 use rand::prelude::ThreadRng;
 
+use crate::helpers::create_message::create_message;
 use crate::helpers::create_ship_debris::create_ship_debris;
 use crate::helpers::entity_types::EntityTypes;
 use crate::helpers::get_player_id;
@@ -24,10 +25,10 @@ pub fn collide_with_asteroids_system(
             &Names::Size.to_string(),
             ENTITY_ID,
         ])?;
-        let locations = &query[0];
-        let markers = &query[1];
-        let sizes = &query[2];
-        let ids = &query[3];
+        let locations = query.get(&Names::Location.to_string()).unwrap();
+        let markers = query.get(&Names::Marker.to_string()).unwrap();
+        let sizes = query.get(&Names::Size.to_string()).unwrap();
+        let ids = query.get(ENTITY_ID).unwrap();
         let player_index = get_player_index(player_id, &ids)?;
         let player_location: &DataWrapper<Point> = locations[player_index].cast()?;
         let player_location = *player_location.borrow();
@@ -44,6 +45,15 @@ pub fn collide_with_asteroids_system(
             {
                 world.delete_by_id(player_id).unwrap();
                 create_ship_debris(particles_world, context, rng, player_location).unwrap();
+                let screen_size = graphics::drawable_size(context);
+                // We cannot mutate the world here, so we need to do this somewhere else
+                crate::GameState::insert_message_into_world(
+                    "You died :(...Press Return to start again",
+                    &mut world,
+                    screen_size,
+                    context,
+                )
+                .unwrap();
             }
         });
     }

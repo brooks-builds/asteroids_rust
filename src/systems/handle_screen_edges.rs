@@ -12,7 +12,7 @@ pub fn handle_screen_edges_system(world: &World) -> Result<()> {
     // let mut wrapped_locations = world.query_one(Names::Location.to_string())?.borrow_mut();
     // let locations: &mut Vec<Point> = wrapped_locations.cast_mut()?;
     let queries = world.query(vec![&Names::Location.to_string()])?;
-    let locations = &queries[0];
+    let locations = queries.get(&Names::Location.to_string()).unwrap();
 
     locations.iter().for_each(|location| {
         let location: &DataWrapper<Point> = location.cast().unwrap();

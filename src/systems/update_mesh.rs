@@ -22,21 +22,14 @@ pub fn update_mesh_system(context: &mut Context, world: &World) -> Result<()> {
             .get_resource(Names::PlayerShipColor.to_string())?
             .borrow();
         let player_ship_color: &Color = wrapped_player_ship_color.cast()?;
-        // let wrapped_sizes = world.query_one(Names::Size.to_string())?.borrow();
-        // let sizes: &Vec<f32> = wrapped_sizes.cast()?;
-        // let mut wrapped_meshes = world
-        //     .query_one(Names::Mesh.to_string())
-        //     .unwrap()
-        //     .borrow_mut();
-        // let meshes: &mut Vec<Mesh> = wrapped_meshes.cast_mut()?;
         let queries = world.query(vec![
             &Names::Size.to_string(),
             &Names::Mesh.to_string(),
             ENTITY_ID,
         ])?;
-        let sizes = &queries[0];
-        let meshes = &queries[1];
-        let ids = &queries[2];
+        let sizes = queries.get(&Names::Size.to_string()).unwrap();
+        let meshes = queries.get(&Names::Mesh.to_string()).unwrap();
+        let ids = queries.get(ENTITY_ID).unwrap();
         let player_index = get_player_index(player_id, &ids)?;
         let player_size: &DataWrapper<f32> = sizes[player_index].cast()?;
         let player_mesh: &DataWrapper<Mesh> = meshes[player_index].cast()?;

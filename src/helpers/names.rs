@@ -15,6 +15,7 @@ pub enum Names {
     Mesh,
     Message,
     PlayerShipColor,
+    PlayerSize,
     RotateRightKeyCode,
     RotateLeftKeyCode,
     Rotation,

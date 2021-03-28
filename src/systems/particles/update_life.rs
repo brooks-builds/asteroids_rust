@@ -6,8 +6,8 @@ use crate::helpers::names::Names;
 
 pub fn update_life_system(particles_world: &World) -> Result<()> {
     let query = particles_world.query(vec![&Names::TicksToLive.to_string(), ENTITY_ID])?;
-    let ticks_to_live = &query[0];
-    let ids = &query[1];
+    let ticks_to_live = query.get(&Names::TicksToLive.to_string()).unwrap();
+    let ids = query.get(ENTITY_ID).unwrap();
 
     ticks_to_live
         .iter()

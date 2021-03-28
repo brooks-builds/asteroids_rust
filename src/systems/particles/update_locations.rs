@@ -10,8 +10,8 @@ pub fn update_locations_system(particles_world: &World) -> Result<()> {
         &Names::Location.to_string(),
         &Names::Velocity.to_string(),
     ])?;
-    let locations = &query[0];
-    let velocities = &query[1];
+    let locations = query.get(&Names::Location.to_string()).unwrap();
+    let velocities = query.get(&Names::Velocity.to_string()).unwrap();
 
     locations
         .iter()

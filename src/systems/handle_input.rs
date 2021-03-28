@@ -50,8 +50,8 @@ fn handle_rotation(world: &World, context: &mut Context, player_id: u32) -> Resu
         .borrow();
     let rotation_speed: &f32 = wrapped_rotation_speed.cast().unwrap();
     let queries = world.query(vec![&Names::Rotation.to_string(), ENTITY_ID])?;
-    let rotations = &queries[0];
-    let ids = &queries[1];
+    let rotations = queries.get(&Names::Rotation.to_string()).unwrap();
+    let ids = queries.get(ENTITY_ID).unwrap();
     let player_index = get_player_index(player_id, ids)?;
 
     if keyboard::is_key_pressed(context, *rotate_left_keycode) {

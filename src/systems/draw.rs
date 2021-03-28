@@ -13,9 +13,9 @@ pub fn draw_system(context: &mut Context, world: &World) -> Result<()> {
         &Names::Rotation.to_string(),
         &Names::Mesh.to_string(),
     ])?;
-    let locations = &query[0];
-    let rotations = &query[1];
-    let meshes = &query[2];
+    let locations = query.get(&Names::Location.to_string()).unwrap();
+    let rotations = query.get(&Names::Rotation.to_string()).unwrap();
+    let meshes = query.get(&Names::Mesh.to_string()).unwrap();
 
     for (index, location) in locations.iter().enumerate() {
         let location: &DataWrapper<Point> = location.cast()?;

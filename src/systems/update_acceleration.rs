@@ -20,9 +20,9 @@ pub fn update_acceleration_system(world: &World) -> Result<()> {
                 &Names::Rotation.to_string(),
                 ENTITY_ID,
             ])?;
-            let accelerations = &queries[0];
-            let rotations = &queries[1];
-            let ids = &queries[2];
+            let accelerations = queries.get(&Names::Acceleration.to_string()).unwrap();
+            let rotations = queries.get(&Names::Rotation.to_string()).unwrap();
+            let ids = queries.get(ENTITY_ID).unwrap();
             let player_index = get_player_index(player_id, &ids)?;
 
             let player_rotation: &DataWrapper<f32> = rotations[player_index].cast()?;
