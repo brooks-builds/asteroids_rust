@@ -1,11 +1,11 @@
 use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
+use bbecs::resources::resource::ResourceCast;
 use bbecs::world::{DataWrapper, World, ENTITY_ID};
 use eyre::Result;
-use ggez::{graphics, Context};
+use ggez::Context;
 use rand::prelude::ThreadRng;
 
-use crate::helpers::create_message::create_message;
 use crate::helpers::create_ship_debris::create_ship_debris;
 use crate::helpers::entity_types::EntityTypes;
 use crate::helpers::get_player_id;
@@ -45,18 +45,18 @@ pub fn collide_with_asteroids_system(
             {
                 world.delete_by_id(player_id).unwrap();
                 create_ship_debris(particles_world, context, rng, player_location).unwrap();
-                let screen_size = graphics::drawable_size(context);
-                // We cannot mutate the world here, so we need to do this somewhere else
-                crate::GameState::insert_message_into_world(
-                    "You died :(...Press Return to start again",
-                    &mut world,
-                    screen_size,
-                    context,
-                )
-                .unwrap();
+                remove_player_life(world).unwrap();
             }
         });
     }
 
+    Ok(())
+}
+
+fn remove_player_life(world: &World) -> Result<()> {
+    let wrapped_player_lives_left = world.get_resource(&Names::LivesRemaining.to_string())?;
+    let mut borrowed_player_lives_left = wrapped_player_lives_left.borrow_mut();
+    let player_lives_left: &mut u32 = borrowed_player_lives_left.cast_mut()?;
+    *player_lives_left -= 1;
     Ok(())
 }

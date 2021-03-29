@@ -1,4 +1,5 @@
 pub mod create_asteroid;
+pub mod create_bullet_mesh;
 pub mod create_debris_mesh;
 pub mod create_message;
 pub mod create_player_ship;
