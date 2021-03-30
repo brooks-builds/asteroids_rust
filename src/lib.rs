@@ -2,18 +2,15 @@ mod errors;
 mod helpers;
 mod systems;
 
-use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
-use bbecs::world::{DataWrapper, World, WorldMethods, ENTITY_ID};
+use bbecs::world::{World, WorldMethods};
 use eyre::Result;
 use ggez::event::{EventHandler, KeyCode};
-use ggez::graphics::{Color, Mesh, Rect, WHITE};
+use ggez::graphics::{Color, Rect, WHITE};
 use ggez::{graphics, timer, Context, GameResult};
 use helpers::create_asteroid::create_asteroid_mesh;
-use helpers::create_player_ship::create_player_ship;
 use helpers::entity_types::EntityTypes;
-use helpers::get_player_id::get_player_id;
 use helpers::names::Names;
 use rand::prelude::ThreadRng;
 use rand::{random, thread_rng};
@@ -22,7 +19,9 @@ use systems::draw::draw_system;
 use systems::draw_message::draw_message_system;
 use systems::handle_input::handle_input_system;
 use systems::handle_screen_edges::handle_screen_edges_system;
-use systems::main::handle_respawn::handle_message_system;
+use systems::main::display_message::handle_message_system;
+use systems::main::fire_bullet::fire_bullet_system;
+use systems::main::handle_respawn::handle_respawn_system;
 use systems::particles;
 use systems::update_acceleration::update_acceleration_system;
 use systems::update_mesh::update_mesh_system;
@@ -123,24 +122,6 @@ impl GameState {
             rng: thread_rng(),
             particles_world,
         })
-    }
-
-    fn create_player(
-        world: &mut World,
-        player_ship: Mesh,
-        size: f32,
-        location: Point,
-    ) -> Result<()> {
-        world
-            .spawn_entity()?
-            .with_component(&Names::Location.to_string(), location)?
-            .with_component(&Names::Rotation.to_string(), 0.0_f32)?
-            .with_component(&Names::Velocity.to_string(), Point::new(0.0, 0.0))?
-            .with_component(&Names::Acceleration.to_string(), Point::new(0.0, 0.0))?
-            .with_component(&Names::Mesh.to_string(), player_ship)?
-            .with_component(&Names::Marker.to_string(), EntityTypes::Player.to_string())?
-            .with_component(&Names::Size.to_string(), size)?;
-        Ok(())
     }
 
     fn create_asteroid(
@@ -256,61 +237,7 @@ impl EventHandler for GameState {
         _keymods: ggez::event::KeyMods,
         _repeat: bool,
     ) {
-        let borrowed_lives_remaining = self
-            .world
-            .get_resource(&Names::LivesRemaining.to_string())
-            .unwrap()
-            .borrow();
-        let lives_remaining: u32 = *borrowed_lives_remaining.cast().unwrap();
-        drop(borrowed_lives_remaining);
-
-        if get_player_id(&self.world).unwrap().is_none()
-            && keycode == KeyCode::Return
-            && lives_remaining > 0
-        {
-            let wrapped_player_size = self
-                .world
-                .get_resource(&Names::PlayerSize.to_string())
-                .unwrap()
-                .borrow();
-            let player_size: f32 = *wrapped_player_size.cast().unwrap();
-            let wrapped_player_ship_color = self
-                .world
-                .get_resource(&Names::PlayerShipColor.to_string())
-                .unwrap()
-                .borrow();
-            let player_ship_color: &Color = wrapped_player_ship_color.cast().unwrap();
-            let wrapped_thruster_color = self
-                .world
-                .get_resource(&Names::ThrusterColor.to_string())
-                .unwrap()
-                .borrow();
-            let thruster_color: &Color = wrapped_thruster_color.cast().unwrap();
-            let query = self
-                .world
-                .query(vec![&Names::Message.to_string(), ENTITY_ID])
-                .unwrap();
-            let ids = query.get(ENTITY_ID).unwrap();
-            for id in ids {
-                let id: &DataWrapper<u32> = id.cast().unwrap();
-                self.world.delete_by_id(*id.borrow()).unwrap();
-            }
-
-            let player_ship = create_player_ship(
-                context,
-                player_size,
-                *player_ship_color,
-                false,
-                *thruster_color,
-            )
-            .unwrap();
-            let (width, height) = graphics::drawable_size(context);
-            let player_location = Point::new(width / 2.0, height / 2.0);
-            drop(wrapped_player_ship_color);
-            drop(wrapped_player_size);
-            drop(wrapped_thruster_color);
-            Self::create_player(&mut self.world, player_ship, player_size, player_location)
-                .unwrap();
-        }
+        handle_respawn_system(&mut self.world, keycode, context).unwrap();
+        fire_bullet_system(&mut self.world, keycode, context).unwrap();
     }
 }

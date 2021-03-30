@@ -1,53 +1,59 @@
+use crate::helpers::create_player::create_player;
+use crate::helpers::create_player_ship::create_player_ship;
+use crate::helpers::get_player_id::get_player_id;
+use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
-use bbecs::world::{World, WorldMethods};
+use bbecs::world::{DataWrapper, World, ENTITY_ID};
 use eyre::Result;
-use ggez::{graphics, Context};
+use ggez::event::KeyCode;
+use ggez::graphics::{self, Color};
+use ggez::Context;
 
-use crate::helpers::entity_types::EntityTypes;
 use crate::helpers::names::Names;
-use crate::helpers::{create_message, get_player_id};
 
-pub fn handle_message_system(world: &mut World, context: &mut Context) -> Result<()> {
-    if get_player_id::get_player_id(&world)?.is_none() {
-        let query = world.query(vec![&Names::Message.to_string()])?;
-        let messages = query.get(&Names::Message.to_string()).unwrap();
-        if !messages.is_empty() {
-            return Ok(());
-        }
-
-        let wrapped_lives_remaining = world.get_resource(&Names::LivesRemaining.to_string())?;
-        let lives_remaining: u32 = *wrapped_lives_remaining.borrow().cast()?;
-
-        let message = match lives_remaining {
-            3 => "Press Enter to start the game",
-            2 => "2 lives left, press enter to re-spawn",
-            1 => "last life! Press enter to re-spawn",
-            0 => "Game over",
-            _ => "What happened?",
-        };
-
-        insert_message_into_world(message, world, context)?;
-    }
-
-    Ok(())
-}
-
-fn insert_message_into_world(
-    message: &str,
+pub fn handle_respawn_system(
     world: &mut World,
+    keycode: KeyCode,
     context: &mut Context,
 ) -> Result<()> {
-    let screen_size = graphics::drawable_size(context);
-    let text = create_message::create_message(message);
-    let location = Point::new(
-        screen_size.0 / 2.0 - text.width(context) as f32 / 2.0,
-        screen_size.1 / 2.0 - text.height(context) as f32 / 2.0,
-    );
-    world
-        .spawn_entity()?
-        .with_component(&Names::Location.to_string(), location)?
-        .with_component(&Names::Marker.to_string(), EntityTypes::Message.to_string())?
-        .with_component(&Names::Message.to_string(), text)?;
+    let borrowed_lives_remaining = world
+        .get_resource(&Names::LivesRemaining.to_string())?
+        .borrow();
+    let lives_remaining: u32 = *borrowed_lives_remaining.cast()?;
+    drop(borrowed_lives_remaining);
+
+    if get_player_id(&world)?.is_none() && keycode == KeyCode::Return && lives_remaining > 0 {
+        let wrapped_player_size = world.get_resource(&Names::PlayerSize.to_string())?.borrow();
+        let player_size: f32 = *wrapped_player_size.cast()?;
+        let wrapped_player_ship_color = world
+            .get_resource(&Names::PlayerShipColor.to_string())?
+            .borrow();
+        let player_ship_color: &Color = wrapped_player_ship_color.cast()?;
+        let wrapped_thruster_color = world
+            .get_resource(&Names::ThrusterColor.to_string())?
+            .borrow();
+        let thruster_color: &Color = wrapped_thruster_color.cast()?;
+        let query = world.query(vec![&Names::Message.to_string(), ENTITY_ID])?;
+        let ids = query.get(ENTITY_ID).unwrap();
+        for id in ids {
+            let id: &DataWrapper<u32> = id.cast()?;
+            world.delete_by_id(*id.borrow())?;
+        }
+
+        let player_ship = create_player_ship(
+            context,
+            player_size,
+            *player_ship_color,
+            false,
+            *thruster_color,
+        )?;
+        let (width, height) = graphics::drawable_size(context);
+        let player_location = Point::new(width / 2.0, height / 2.0);
+        drop(wrapped_player_ship_color);
+        drop(wrapped_player_size);
+        drop(wrapped_thruster_color);
+        create_player(world, player_ship, player_size, player_location)?;
+    }
     Ok(())
 }
