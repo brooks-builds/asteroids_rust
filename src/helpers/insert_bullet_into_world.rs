@@ -4,6 +4,7 @@ use eyre::Result;
 use ggez::Context;
 
 use super::create_bullet_mesh;
+use super::entity_types::EntityTypes;
 use super::names::Names;
 
 pub fn insert_bullet_into_world(
@@ -19,7 +20,9 @@ pub fn insert_bullet_into_world(
         .with_component(&Names::Location.to_string(), location)?
         .with_component(&Names::Rotation.to_string(), 0.0_f32)?
         .with_component(&Names::Velocity.to_string(), Point::new(0.0, 0.0))?
-        .with_component(&Names::Acceleration.to_string(), acceleration)?;
+        .with_component(&Names::Acceleration.to_string(), acceleration)?
+        .with_component(&Names::Marker.to_string(), EntityTypes::Bullet.to_string())?
+        .with_component(&Names::TicksToLive.to_string(), 125_usize)?;
 
     Ok(())
 }
