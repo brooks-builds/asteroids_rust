@@ -22,7 +22,8 @@ pub fn insert_bullet_into_world(
         .with_component(&Names::Velocity.to_string(), Point::new(0.0, 0.0))?
         .with_component(&Names::Acceleration.to_string(), acceleration)?
         .with_component(&Names::Marker.to_string(), EntityTypes::Bullet.to_string())?
-        .with_component(&Names::TicksToLive.to_string(), 125_usize)?;
+        .with_component(&Names::TicksToLive.to_string(), 125_usize)?
+        .with_component(&Names::Size.to_string(), 2.0_f32)?;
 
     Ok(())
 }

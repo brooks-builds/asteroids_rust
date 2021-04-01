@@ -22,6 +22,7 @@ use systems::main::display_message::handle_message_system;
 use systems::main::fire_bullet::fire_bullet_system;
 use systems::main::handle_bullets_hitting_asteroids::handle_bullets_hitting_asteroids_system;
 use systems::main::handle_respawn::handle_respawn_system;
+use systems::main::insert_asteroids::insert_asteroids_system;
 use systems::particles;
 use systems::particles::update_life::update_life_system;
 use systems::update_acceleration::update_acceleration_system;
@@ -46,7 +47,7 @@ impl GameState {
         let thruster_color = Color::new(1.0, 0.0, 0.0, 1.0);
         let asteroid_speed = 1.0_f32;
         let asteroid_radius = 100.0;
-        let update_fps = 1_u32;
+        let update_fps = 60_u32;
         let seconds_to_respawn = 3_usize;
         let debris_seconds_to_live = seconds_to_respawn / 2;
 
@@ -152,7 +153,8 @@ impl EventHandler for GameState {
             .unwrap();
             handle_message_system(&mut self.world, context).unwrap();
             update_life_system(&self.world).unwrap();
-            handle_bullets_hitting_asteroids_system(&mut self.world, context).unwrap();
+            let destroyed_asteroids = handle_bullets_hitting_asteroids_system(&self.world).unwrap();
+            insert_asteroids_system(&mut self.world, context, destroyed_asteroids).unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
             particles::update_life::update_life_system(&self.particles_world).unwrap();
             particles::fade_debris_system::fade_debris_system(&self.particles_world).unwrap();

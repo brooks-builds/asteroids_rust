@@ -1,56 +1,25 @@
+use std::f32;
+
+use bbecs::data_types::point::Point;
 use ggez::graphics::{DrawMode, Mesh, MeshBuilder, WHITE};
 use ggez::{Context, GameResult};
-use rand::random;
-
-const RANDOM_OFFSET: f32 = 100.0;
+use rand::{random, thread_rng, Rng};
 
 pub fn create_asteroid_mesh(context: &mut Context, radius: f32) -> GameResult<Mesh> {
-    let first_point = [
-        0.0,
-        -radius + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-    ];
-    let points = [
-        // top
-        first_point,
-        // top right
-        [
-            radius / 2.0 + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-            -radius / 2.0 + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-        ],
-        // right
-        [
-            radius + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-            0.0,
-        ],
-        // bottom right
-        [
-            radius / 2.0 + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-            radius / 2.0 + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-        ],
-        // bottom
-        [
-            0.0,
-            radius + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-        ],
-        // bottom left
-        [
-            -radius / 2.0 + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-            radius / 2.0 + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-        ],
-        // left
-        [
-            -radius + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-            0.0,
-        ],
-        // top left
-        [
-            -radius / 2.0 + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-            -radius / 2.0 + random::<f32>() * RANDOM_OFFSET - RANDOM_OFFSET / 2.0,
-        ],
-        // top
-        first_point,
-    ];
+    let mut points = vec![];
+    let mut rng = thread_rng();
+
+    let point_count = 6;
+    let angle = std::f32::consts::TAU / point_count as f32;
+    let random_offset = angle as f32 * 0.2;
+    for count in 0..point_count {
+        let current_angle = (angle * count as f32) + rng.gen_range(-random_offset..random_offset);
+        let mut point = Point::new(current_angle.cos(), current_angle.sin());
+        point.multiply_scalar(radius);
+        points.push(point.to_array());
+    }
     MeshBuilder::new()
-        .polyline(DrawMode::stroke(3.0), &points, WHITE)?
+        .polygon(DrawMode::stroke(3.0), &points, WHITE)?
+        // .circle(DrawMode::stroke(1.0), [0.0, 0.0], radius, 5.0, WHITE)
         .build(context)
 }

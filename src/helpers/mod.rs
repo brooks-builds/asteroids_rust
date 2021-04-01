@@ -1,3 +1,4 @@
+pub mod asteroid_data;
 pub mod create_asteroid_mesh;
 pub mod create_bullet_mesh;
 pub mod create_debris_mesh;
