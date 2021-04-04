@@ -34,6 +34,7 @@ pub fn handle_respawn_system(
             .get_resource(&Names::ThrusterColor.to_string())?
             .borrow();
         let thruster_color: &Color = wrapped_thruster_color.cast()?;
+        // we are deleting all messages, even if we shouldn't
         let query = world.query(vec![&Names::Message.to_string(), ENTITY_ID])?;
         let ids = query.get(ENTITY_ID).unwrap();
         for id in ids {

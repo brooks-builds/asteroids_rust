@@ -11,7 +11,7 @@ pub fn insert_asteroids_system(
     destroyed_asteroids: Vec<AsteroidData>,
 ) -> Result<()> {
     for mut destroyed_asteroid in destroyed_asteroids {
-        if destroyed_asteroid.size < 15.0 {
+        if destroyed_asteroid.size < 20.0 {
             continue;
         }
         destroyed_asteroid.update_for_destroyed();

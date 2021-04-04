@@ -18,6 +18,6 @@ impl AsteroidData {
 
     pub fn update_for_destroyed(&mut self) {
         self.size /= 2.0;
-        self.speed *= 1.7;
+        self.speed *= 1.1;
     }
 }

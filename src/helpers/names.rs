@@ -2,6 +2,7 @@
 pub enum Names {
     Acceleration,
     ArenaSize,
+    AsteroidRadius,
     AsteroidSpeed,
     BackgroundColor,
     DebrisColor,
@@ -9,6 +10,7 @@ pub enum Names {
     DebrisParticleSpeed,
     DebrisSize,
     DebrisTicksToLive,
+    Level,
     LivesRemaining,
     Location,
     Marker,
@@ -16,6 +18,7 @@ pub enum Names {
     Message,
     PlayerShipColor,
     PlayerSize,
+    ReloadingTicksLeft,
     RotateRightKeyCode,
     RotateLeftKeyCode,
     Rotation,

@@ -5,14 +5,16 @@ mod systems;
 use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
 use bbecs::world::{World, WorldMethods};
+use eyre::Result;
 use ggez::event::{EventHandler, KeyCode};
 use ggez::graphics::{Color, Rect, WHITE};
 use ggez::{graphics, timer, Context, GameResult};
-use helpers::insert_asteroid_into_world;
+use helpers::create_message::create_message;
+use helpers::entity_types::EntityTypes;
+use helpers::insert_asteroids_into_world::insert_asteroids_into_world;
 use helpers::names::Names;
-use insert_asteroid_into_world::insert_asteroid_into_world;
 use rand::prelude::ThreadRng;
-use rand::{thread_rng, Rng};
+use rand::thread_rng;
 use systems::collide_with_asteroids::collide_with_asteroids_system;
 use systems::draw::draw_system;
 use systems::draw_message::draw_message_system;
@@ -23,6 +25,8 @@ use systems::main::fire_bullet::fire_bullet_system;
 use systems::main::handle_bullets_hitting_asteroids::handle_bullets_hitting_asteroids_system;
 use systems::main::handle_respawn::handle_respawn_system;
 use systems::main::insert_asteroids::insert_asteroids_system;
+use systems::main::level::level_system;
+use systems::main::update_display_level::update_display_level_system;
 use systems::particles;
 use systems::particles::update_life::update_life_system;
 use systems::update_acceleration::update_acceleration_system;
@@ -37,7 +41,7 @@ pub struct GameState {
 
 impl GameState {
     pub fn new(context: &mut Context) -> GameResult<Self> {
-        let mut rng = thread_rng();
+        let rng = thread_rng();
         let mut world = World::new();
         let mut particles_world = World::new();
         let (width, height) = graphics::drawable_size(context);
@@ -50,6 +54,7 @@ impl GameState {
         let update_fps = 60_u32;
         let seconds_to_respawn = 3_usize;
         let debris_seconds_to_live = seconds_to_respawn / 2;
+        let level = 1_u32;
 
         world.register(&Names::Location.to_string()).unwrap();
         world.register(&Names::Thrusting.to_string()).unwrap();
@@ -98,6 +103,9 @@ impl GameState {
         );
         world.add_resource(Names::LivesRemaining.to_string(), 3_u32);
         world.add_resource(Names::PlayerSize.to_string(), player_size);
+        world.add_resource(Names::Level.to_string(), level);
+        world.add_resource(Names::AsteroidRadius.to_string(), asteroid_radius);
+        world.add_resource(Names::ReloadingTicksLeft.to_string(), 0_u32);
 
         particles_world.add_resource(Names::DebrisParticleSpeed.to_string(), 2.0_f32);
         particles_world.add_resource(Names::DebrisParticleCount.to_string(), 40_u32);
@@ -107,24 +115,37 @@ impl GameState {
         );
         particles_world.add_resource(Names::DebrisSize.to_string(), 3.0_f32);
 
-        for _ in 0..1 {
-            let asteroid_location =
-                Point::new(rng.gen_range(0.0..width), rng.gen_range(0.0..height));
-            insert_asteroid_into_world(
+        for _ in 0..level {
+            insert_asteroids_into_world(
+                (width, height),
                 &mut world,
                 asteroid_radius,
                 context,
                 asteroid_speed,
-                asteroid_location,
             )
             .unwrap();
         }
+
+        Self::create_level_text(&mut world).unwrap();
 
         Ok(Self {
             world,
             rng,
             particles_world,
         })
+    }
+
+    fn create_level_text(world: &mut World) -> Result<()> {
+        let level_text = create_message("Level: 0", 25.0);
+        world
+            .spawn_entity()?
+            .with_component(&Names::Message.to_string(), level_text)?
+            .with_component(&Names::Location.to_string(), Point::new(5.0, 5.0))?
+            .with_component(
+                &Names::Marker.to_string(),
+                EntityTypes::LevelText.to_string(),
+            )?;
+        Ok(())
     }
 }
 
@@ -155,6 +176,9 @@ impl EventHandler for GameState {
             update_life_system(&self.world).unwrap();
             let destroyed_asteroids = handle_bullets_hitting_asteroids_system(&self.world).unwrap();
             insert_asteroids_system(&mut self.world, context, destroyed_asteroids).unwrap();
+            level_system(&mut self.world, context).unwrap();
+            fire_bullet_system(&mut self.world, context).unwrap();
+            update_display_level_system(&self.world).unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
             particles::update_life::update_life_system(&self.particles_world).unwrap();
             particles::fade_debris_system::fade_debris_system(&self.particles_world).unwrap();
@@ -193,6 +217,5 @@ impl EventHandler for GameState {
         _repeat: bool,
     ) {
         handle_respawn_system(&mut self.world, keycode, context).unwrap();
-        fire_bullet_system(&mut self.world, keycode, context).unwrap();
     }
 }

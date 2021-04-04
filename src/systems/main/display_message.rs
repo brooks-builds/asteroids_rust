@@ -12,7 +12,7 @@ pub fn handle_message_system(world: &mut World, context: &mut Context) -> Result
     if get_player_id::get_player_id(&world)?.is_none() {
         let query = world.query(vec![&Names::Message.to_string()])?;
         let messages = query.get(&Names::Message.to_string()).unwrap();
-        if !messages.is_empty() {
+        if messages.len() > 1 {
             return Ok(());
         }
 
@@ -39,7 +39,7 @@ fn insert_message_into_world(
     context: &mut Context,
 ) -> Result<()> {
     let screen_size = graphics::drawable_size(context);
-    let text = create_message::create_message(message);
+    let text = create_message::create_message(message, 75.0);
     let location = Point::new(
         screen_size.0 / 2.0 - text.width(context) as f32 / 2.0,
         screen_size.1 / 2.0 - text.height(context) as f32 / 2.0,

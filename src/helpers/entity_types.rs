@@ -4,6 +4,7 @@ pub enum EntityTypes {
     Asteroid,
     Message,
     Bullet,
+    LevelText,
 }
 
 #[cfg(test)]
