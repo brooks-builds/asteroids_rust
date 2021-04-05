@@ -6,6 +6,7 @@ use crate::helpers::get_indexes_with_marker::get_indexes_with_marker;
 use crate::helpers::names::Names;
 use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
+use bbecs::resources::resource::ResourceCast;
 use bbecs::world::{DataWrapper, World, ENTITY_ID};
 use eyre::Result;
 
@@ -56,6 +57,8 @@ pub fn handle_bullets_hitting_asteroids_system(world: &World) -> Result<Vec<Aste
                     velocity_components[*asteroid_index].cast()?;
                 let borrowed_asteroid_velocity = wrapped_asteroid_velocity.borrow();
 
+                update_score(world)?;
+
                 destroyed_asteroids.push(AsteroidData::new(
                     *borrowed_asteroid_size,
                     borrowed_asteroid_velocity.length(),
@@ -66,4 +69,20 @@ pub fn handle_bullets_hitting_asteroids_system(world: &World) -> Result<Vec<Aste
     }
 
     Ok(destroyed_asteroids)
+}
+
+fn update_score(world: &World) -> Result<()> {
+    let level = get_level(world)?;
+    let query = world.query(vec![&Names::Score.to_string()])?;
+    let scores = query.get(&Names::Score.to_string()).unwrap();
+    assert!(scores.len() == 1);
+    let score: &DataWrapper<u32> = scores[0].cast()?;
+    let mut score = score.borrow_mut();
+    *score += level;
+    Ok(())
+}
+
+fn get_level(world: &World) -> Result<u32> {
+    let level = world.get_resource(&Names::Level.to_string())?.borrow();
+    Ok(*level.cast()?)
 }

@@ -27,6 +27,7 @@ use systems::main::handle_respawn::handle_respawn_system;
 use systems::main::insert_asteroids::insert_asteroids_system;
 use systems::main::level::level_system;
 use systems::main::update_display_level::update_display_level_system;
+use systems::main::update_score_text_system::update_score_text_system;
 use systems::particles;
 use systems::particles::update_life::update_life_system;
 use systems::update_acceleration::update_acceleration_system;
@@ -66,6 +67,7 @@ impl GameState {
         world.register(&Names::Size.to_string()).unwrap();
         world.register(&Names::Message.to_string()).unwrap();
         world.register(&Names::TicksToLive.to_string()).unwrap();
+        world.register(&Names::Score.to_string()).unwrap();
 
         particles_world.register(&Names::Mesh.to_string()).unwrap();
         particles_world
@@ -127,6 +129,8 @@ impl GameState {
         }
 
         Self::create_level_text(&mut world).unwrap();
+        Self::create_score(&mut world).unwrap();
+        Self::create_lives_left_text(&mut world).unwrap();
 
         Ok(Self {
             world,
@@ -144,6 +148,34 @@ impl GameState {
             .with_component(
                 &Names::Marker.to_string(),
                 EntityTypes::LevelText.to_string(),
+            )?;
+        Ok(())
+    }
+
+    fn create_score(world: &mut World) -> Result<()> {
+        world
+            .spawn_entity()?
+            .with_component(&Names::Location.to_string(), Point::new(5.0, 30.0))?
+            .with_component(
+                &Names::Message.to_string(),
+                create_message("Score: 0", 25.0),
+            )?
+            .with_component(&Names::Score.to_string(), 0_u32)?
+            .with_component(&Names::Marker.to_string(), EntityTypes::Score.to_string())?;
+        Ok(())
+    }
+
+    fn create_lives_left_text(world: &mut World) -> Result<()> {
+        world
+            .spawn_entity()?
+            .with_component(&Names::Location.to_string(), Point::new(5.0, 60.0))?
+            .with_component(
+                &Names::Message.to_string(),
+                create_message("lives left: ", 25.0),
+            )?
+            .with_component(
+                &Names::Marker.to_string(),
+                EntityTypes::LivesText.to_string(),
             )?;
         Ok(())
     }
@@ -179,6 +211,7 @@ impl EventHandler for GameState {
             level_system(&mut self.world, context).unwrap();
             fire_bullet_system(&mut self.world, context).unwrap();
             update_display_level_system(&self.world).unwrap();
+            update_score_text_system(&self.world).unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
             particles::update_life::update_life_system(&self.particles_world).unwrap();
             particles::fade_debris_system::fade_debris_system(&self.particles_world).unwrap();

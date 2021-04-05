@@ -1,11 +1,10 @@
+use crate::helpers::names::Names;
 use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
 use bbecs::world::{DataWrapper, World};
 use eyre::Result;
 use ggez::graphics::{DrawParam, Mesh};
 use ggez::{graphics, Context};
-
-use crate::helpers::names::Names;
 
 pub fn draw_system(context: &mut Context, world: &World) -> Result<()> {
     let query = world.query(vec![

@@ -10,6 +10,7 @@ pub mod create_ship_debris;
 pub mod entity_types;
 pub mod get_asteroid_radius;
 pub mod get_indexes_with_marker;
+pub mod get_lives_left;
 pub mod get_player_id;
 pub mod get_player_index;
 pub mod insert_asteroid_into_world;

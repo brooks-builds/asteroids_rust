@@ -23,6 +23,7 @@ pub enum Names {
     RotateLeftKeyCode,
     Rotation,
     RotationSpeed,
+    Score,
     Size,
     SpawnPlayerIn,
     SpawnTime,
