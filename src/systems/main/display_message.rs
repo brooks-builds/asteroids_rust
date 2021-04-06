@@ -2,6 +2,7 @@ use bbecs::components::{CastComponents, ComponentData};
 use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
 use bbecs::world::{DataWrapper, World, WorldMethods};
+use create_message::create_message;
 use eyre::Result;
 use ggez::{graphics, Context};
 
@@ -20,12 +21,10 @@ pub fn handle_message_system(world: &mut World, context: &mut Context) -> Result
         let wrapped_lives_remaining = world.get_resource(&Names::LivesRemaining.to_string())?;
         let lives_remaining: u32 = *wrapped_lives_remaining.borrow().cast()?;
 
-        let message = match lives_remaining {
-            3 => "Press Enter to start the game",
-            2 => "2 lives left, press enter to re-spawn",
-            1 => "last life! Press enter to re-spawn",
-            0 => "Game over",
-            _ => "What happened?",
+        let message = if lives_remaining > 0 {
+            "Press Enter to spawn ship"
+        } else {
+            "Game Over"
         };
 
         insert_message_into_world(message, world, context)?;

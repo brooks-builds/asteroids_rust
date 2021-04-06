@@ -9,6 +9,7 @@ use eyre::Result;
 use ggez::event::{EventHandler, KeyCode};
 use ggez::graphics::{Color, Rect, WHITE};
 use ggez::{graphics, timer, Context, GameResult};
+use helpers::create_lives_left_mesh::create_lives_left_mesh;
 use helpers::create_message::create_message;
 use helpers::entity_types::EntityTypes;
 use helpers::insert_asteroids_into_world::insert_asteroids_into_world;
@@ -27,6 +28,7 @@ use systems::main::handle_respawn::handle_respawn_system;
 use systems::main::insert_asteroids::insert_asteroids_system;
 use systems::main::level::level_system;
 use systems::main::update_display_level::update_display_level_system;
+use systems::main::update_lives_remaining_mesh::{self, update_lives_remaining_mesh};
 use systems::main::update_score_text_system::update_score_text_system;
 use systems::particles;
 use systems::particles::update_life::update_life_system;
@@ -56,6 +58,7 @@ impl GameState {
         let seconds_to_respawn = 3_usize;
         let debris_seconds_to_live = seconds_to_respawn / 2;
         let level = 1_u32;
+        let lives_remaining = 5_u32;
 
         world.register(&Names::Location.to_string()).unwrap();
         world.register(&Names::Thrusting.to_string()).unwrap();
@@ -103,7 +106,7 @@ impl GameState {
             Names::SpawnTime.to_string(),
             seconds_to_respawn * update_fps as usize,
         );
-        world.add_resource(Names::LivesRemaining.to_string(), 3_u32);
+        world.add_resource(Names::LivesRemaining.to_string(), lives_remaining);
         world.add_resource(Names::PlayerSize.to_string(), player_size);
         world.add_resource(Names::Level.to_string(), level);
         world.add_resource(Names::AsteroidRadius.to_string(), asteroid_radius);
@@ -130,7 +133,7 @@ impl GameState {
 
         Self::create_level_text(&mut world).unwrap();
         Self::create_score(&mut world).unwrap();
-        Self::create_lives_left_text(&mut world).unwrap();
+        Self::create_lives_left_text(&mut world, context, lives_remaining).unwrap();
 
         Ok(Self {
             world,
@@ -165,17 +168,22 @@ impl GameState {
         Ok(())
     }
 
-    fn create_lives_left_text(world: &mut World) -> Result<()> {
+    fn create_lives_left_text(
+        world: &mut World,
+        context: &mut Context,
+        lives_left: u32,
+    ) -> Result<()> {
         world
             .spawn_entity()?
             .with_component(&Names::Location.to_string(), Point::new(5.0, 60.0))?
+            .with_component(&Names::Rotation.to_string(), 0.0_f32)?
             .with_component(
-                &Names::Message.to_string(),
-                create_message("lives left: ", 25.0),
+                &Names::Mesh.to_string(),
+                create_lives_left_mesh(context, lives_left)?,
             )?
             .with_component(
                 &Names::Marker.to_string(),
-                EntityTypes::LivesText.to_string(),
+                EntityTypes::LivesMesh.to_string(),
             )?;
         Ok(())
     }
@@ -212,6 +220,7 @@ impl EventHandler for GameState {
             fire_bullet_system(&mut self.world, context).unwrap();
             update_display_level_system(&self.world).unwrap();
             update_score_text_system(&self.world).unwrap();
+            update_lives_remaining_mesh(&self.world, context).unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
             particles::update_life::update_life_system(&self.particles_world).unwrap();
             particles::fade_debris_system::fade_debris_system(&self.particles_world).unwrap();
