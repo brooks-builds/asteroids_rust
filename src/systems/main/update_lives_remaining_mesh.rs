@@ -1,6 +1,6 @@
 use bbecs::components::{CastComponents, ComponentData};
 use bbecs::world::{DataWrapper, World, ENTITY_ID};
-use eyre::{bail, Result};
+use eyre::Result;
 use ggez::graphics::Mesh;
 use ggez::Context;
 

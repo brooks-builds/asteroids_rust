@@ -2,7 +2,6 @@ use bbecs::components::{CastComponents, ComponentData};
 use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
 use bbecs::world::{DataWrapper, World, WorldMethods};
-use create_message::create_message;
 use eyre::Result;
 use ggez::{graphics, Context};
 

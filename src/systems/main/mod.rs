@@ -4,6 +4,8 @@ pub mod handle_bullets_hitting_asteroids;
 pub mod handle_respawn;
 pub mod insert_asteroids;
 pub mod level;
+pub mod move_ufo_system;
+pub mod spawn_ufo_system;
 pub mod update_display_level;
 pub mod update_lives_remaining_mesh;
 pub mod update_score_text_system;

@@ -14,6 +14,7 @@ use helpers::create_message::create_message;
 use helpers::entity_types::EntityTypes;
 use helpers::insert_asteroids_into_world::insert_asteroids_into_world;
 use helpers::names::Names;
+use noise::Perlin;
 use rand::prelude::ThreadRng;
 use rand::thread_rng;
 use systems::collide_with_asteroids::collide_with_asteroids_system;
@@ -27,8 +28,10 @@ use systems::main::handle_bullets_hitting_asteroids::handle_bullets_hitting_aste
 use systems::main::handle_respawn::handle_respawn_system;
 use systems::main::insert_asteroids::insert_asteroids_system;
 use systems::main::level::level_system;
+use systems::main::move_ufo_system::move_ufo_system;
+use systems::main::spawn_ufo_system::spawn_ufo_system;
 use systems::main::update_display_level::update_display_level_system;
-use systems::main::update_lives_remaining_mesh::{self, update_lives_remaining_mesh};
+use systems::main::update_lives_remaining_mesh::update_lives_remaining_mesh;
 use systems::main::update_score_text_system::update_score_text_system;
 use systems::particles;
 use systems::particles::update_life::update_life_system;
@@ -40,6 +43,8 @@ pub struct GameState {
     world: World,
     rng: ThreadRng,
     particles_world: World,
+    noise: Perlin,
+    noise_offsets: (f64, f64),
 }
 
 impl GameState {
@@ -111,6 +116,7 @@ impl GameState {
         world.add_resource(Names::Level.to_string(), level);
         world.add_resource(Names::AsteroidRadius.to_string(), asteroid_radius);
         world.add_resource(Names::ReloadingTicksLeft.to_string(), 0_u32);
+        world.add_resource(Names::UFOSize.to_string(), 75.0_f32);
 
         particles_world.add_resource(Names::DebrisParticleSpeed.to_string(), 2.0_f32);
         particles_world.add_resource(Names::DebrisParticleCount.to_string(), 40_u32);
@@ -139,6 +145,8 @@ impl GameState {
             world,
             rng,
             particles_world,
+            noise: Perlin::new(),
+            noise_offsets: (0.0, 0.0),
         })
     }
 
@@ -221,11 +229,16 @@ impl EventHandler for GameState {
             update_display_level_system(&self.world).unwrap();
             update_score_text_system(&self.world).unwrap();
             update_lives_remaining_mesh(&self.world, context).unwrap();
+            spawn_ufo_system(&mut self.world, context).unwrap();
+            move_ufo_system(&self.world, self.noise_offsets, &self.noise).unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
             particles::update_life::update_life_system(&self.particles_world).unwrap();
             particles::fade_debris_system::fade_debris_system(&self.particles_world).unwrap();
             self.world.update().unwrap();
             self.particles_world.update().unwrap();
+
+            self.noise_offsets.0 += 0.01;
+            self.noise_offsets.1 += 0.01;
         }
         Ok(())
     }

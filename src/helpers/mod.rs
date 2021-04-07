@@ -8,6 +8,7 @@ pub mod create_message;
 pub mod create_player;
 pub mod create_player_ship;
 pub mod create_ship_debris;
+pub mod create_ufo_mesh;
 pub mod entity_types;
 pub mod get_asteroid_radius;
 pub mod get_indexes_with_marker;

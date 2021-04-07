@@ -23,6 +23,7 @@ pub fn update_movement_system(world: &World) -> Result<()> {
         let velocity: &DataWrapper<Point> = velocities[index].cast()?;
         let mut velocity = velocity.borrow_mut();
         *velocity += *acceleration;
+        velocity.clamp(5.0, -5.0); // we are clamping everything. Let's only clamp the UFO
         *location += *velocity;
         acceleration.multiply_scalar(0.0);
     }

@@ -7,6 +7,7 @@ pub enum EntityTypes {
     LevelText,
     Score,
     LivesMesh,
+    UFO,
 }
 
 #[cfg(test)]
