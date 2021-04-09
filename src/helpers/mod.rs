@@ -1,4 +1,5 @@
 pub mod asteroid_data;
+pub mod bitmask;
 pub mod count_entities_with_marker;
 pub mod create_asteroid_mesh;
 pub mod create_bullet_mesh;

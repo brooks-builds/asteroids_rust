@@ -1,3 +1,4 @@
+use crate::helpers::bitmask::MAIN_LAYER;
 use crate::helpers::create_ufo_mesh::create_ufo_mesh;
 use crate::helpers::{entity_types::EntityTypes, names::Names};
 use bbecs::components::CastComponents;
@@ -26,7 +27,8 @@ pub fn spawn_ufo_system(world: &mut World, context: &mut Context) -> Result<()> 
         .with_component(&Names::Location.to_string(), location)?
         .with_component(&Names::Rotation.to_string(), rotation)?
         .with_component(&Names::Acceleration.to_string(), acceleration)?
-        .with_component(&Names::Velocity.to_string(), velocity)?;
+        .with_component(&Names::Velocity.to_string(), velocity)?
+        .with_component(&Names::CollisionBitMask.to_string(), MAIN_LAYER)?;
     Ok(())
 }
 

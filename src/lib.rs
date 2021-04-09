@@ -22,11 +22,13 @@ use systems::draw::draw_system;
 use systems::draw_message::draw_message_system;
 use systems::handle_input::handle_input_system;
 use systems::handle_screen_edges::handle_screen_edges_system;
+use systems::main::activate_safe_bullets_system::activate_safe_bullets_system;
 use systems::main::display_message::handle_message_system;
 use systems::main::fire_bullet::fire_bullet_system;
 use systems::main::handle_bullets_hitting_asteroids::handle_bullets_hitting_asteroids_system;
 use systems::main::handle_bullets_hitting_ships::handle_bullets_hitting_ships;
 use systems::main::handle_respawn::handle_respawn_system;
+use systems::main::increment_ticks_lived_system::increment_ticks_lived_system;
 use systems::main::insert_asteroids::insert_asteroids_system;
 use systems::main::level::level_system;
 use systems::main::move_ufo_system::move_ufo_system;
@@ -78,6 +80,10 @@ impl GameState {
         world.register(&Names::Message.to_string()).unwrap();
         world.register(&Names::TicksToLive.to_string()).unwrap();
         world.register(&Names::Score.to_string()).unwrap();
+        world
+            .register(&Names::CollisionBitMask.to_string())
+            .unwrap();
+        world.register(&Names::TicksLived.to_string()).unwrap();
 
         particles_world.register(&Names::Mesh.to_string()).unwrap();
         particles_world
@@ -234,7 +240,9 @@ impl EventHandler for GameState {
             spawn_ufo_system(&mut self.world, context).unwrap();
             move_ufo_system(&self.world, self.noise_offsets, &self.noise).unwrap();
             ufo_fire_bullets(&mut self.world, context).unwrap();
-            handle_bullets_hitting_ships(&self.world).unwrap();
+            handle_bullets_hitting_ships(&self.world).unwrap(); // use bitmask for the collisions
+            increment_ticks_lived_system(&self.world).unwrap();
+            activate_safe_bullets_system(&self.world).unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
             particles::update_life::update_life_system(&self.particles_world).unwrap();
             particles::fade_debris_system::fade_debris_system(&self.particles_world).unwrap();
