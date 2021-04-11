@@ -1,6 +1,7 @@
 use std::vec;
 
 use crate::helpers::asteroid_data::AsteroidData;
+use crate::helpers::create_ship_debris::create_ship_debris;
 use crate::helpers::entity_types::EntityTypes;
 use crate::helpers::get_indexes_with_marker::get_indexes_with_marker;
 use crate::helpers::names::Names;
@@ -9,8 +10,15 @@ use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
 use bbecs::world::{DataWrapper, World, ENTITY_ID};
 use eyre::Result;
+use ggez::Context;
+use rand::prelude::ThreadRng;
 
-pub fn handle_bullets_hitting_asteroids_system(world: &World) -> Result<Vec<AsteroidData>> {
+pub fn handle_bullets_hitting_asteroids_system(
+    world: &World,
+    particles_world: &mut World,
+    context: &mut Context,
+    rng: &mut ThreadRng,
+) -> Result<Vec<AsteroidData>> {
     let query = world.query(vec![
         &Names::Location.to_string(),
         &Names::Marker.to_string(),
@@ -59,6 +67,7 @@ pub fn handle_bullets_hitting_asteroids_system(world: &World) -> Result<Vec<Aste
 
                 update_score(world)?;
 
+                create_ship_debris(particles_world, context, rng, *borrowed_asteroid_location)?;
                 destroyed_asteroids.push(AsteroidData::new(
                     *borrowed_asteroid_size,
                     borrowed_asteroid_velocity.length(),

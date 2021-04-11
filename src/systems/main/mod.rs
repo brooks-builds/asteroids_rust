@@ -8,6 +8,7 @@ pub mod increment_ticks_lived_system;
 pub mod insert_asteroids;
 pub mod level;
 pub mod move_ufo_system;
+pub mod render_hitboxes;
 pub mod spawn_ufo_system;
 pub mod ufo_fire_bullets;
 pub mod update_display_level;

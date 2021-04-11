@@ -32,6 +32,8 @@ use systems::main::increment_ticks_lived_system::increment_ticks_lived_system;
 use systems::main::insert_asteroids::insert_asteroids_system;
 use systems::main::level::level_system;
 use systems::main::move_ufo_system::move_ufo_system;
+#[allow(unused_imports)]
+use systems::main::render_hitboxes::render_hitboxes_system;
 use systems::main::spawn_ufo_system::spawn_ufo_system;
 use systems::main::ufo_fire_bullets::ufo_fire_bullets;
 use systems::main::update_display_level::update_display_level_system;
@@ -68,6 +70,7 @@ impl GameState {
         let debris_seconds_to_live = seconds_to_respawn / 2;
         let level = 1_u32;
         let lives_remaining = 5_u32;
+        let ufo_killed_on_level = 1_u32;
 
         world.register(&Names::Location.to_string()).unwrap();
         world.register(&Names::Thrusting.to_string()).unwrap();
@@ -111,7 +114,7 @@ impl GameState {
         world.add_resource(Names::ThrustSpeed.to_string(), 0.2_f32);
         world.add_resource(Names::RotateLeftKeyCode.to_string(), KeyCode::Left);
         world.add_resource(Names::RotateRightKeyCode.to_string(), KeyCode::Right);
-        world.add_resource(Names::RotationSpeed.to_string(), 0.1_f32);
+        world.add_resource(Names::RotationSpeed.to_string(), 0.08_f32);
         world.add_resource(Names::UpdateFps.to_string(), update_fps);
         world.add_resource(Names::AsteroidSpeed.to_string(), asteroid_speed);
         world.add_resource(Names::SpawnPlayerIn.to_string(), 0_usize);
@@ -125,6 +128,7 @@ impl GameState {
         world.add_resource(Names::AsteroidRadius.to_string(), asteroid_radius);
         world.add_resource(Names::ReloadingTicksLeft.to_string(), 0_u32);
         world.add_resource(Names::UFOSize.to_string(), 75.0_f32);
+        world.add_resource(Names::UFOKilledOnLevel.to_string(), ufo_killed_on_level);
 
         particles_world.add_resource(Names::DebrisParticleSpeed.to_string(), 2.0_f32);
         particles_world.add_resource(Names::DebrisParticleCount.to_string(), 40_u32);
@@ -230,17 +234,29 @@ impl EventHandler for GameState {
             .unwrap();
             handle_message_system(&mut self.world, context).unwrap();
             update_life_system(&self.world).unwrap();
-            let destroyed_asteroids = handle_bullets_hitting_asteroids_system(&self.world).unwrap();
+            let destroyed_asteroids = handle_bullets_hitting_asteroids_system(
+                &self.world,
+                &mut self.particles_world,
+                context,
+                &mut self.rng,
+            )
+            .unwrap();
             insert_asteroids_system(&mut self.world, context, destroyed_asteroids).unwrap();
             level_system(&mut self.world, context).unwrap();
             fire_bullet_system(&mut self.world, context).unwrap();
             update_display_level_system(&self.world).unwrap();
             update_score_text_system(&self.world).unwrap();
             update_lives_remaining_mesh(&self.world, context).unwrap();
-            spawn_ufo_system(&mut self.world, context).unwrap();
+            spawn_ufo_system(&mut self.world, context, &mut self.rng).unwrap();
             move_ufo_system(&self.world, self.noise_offsets, &self.noise).unwrap();
             ufo_fire_bullets(&mut self.world, context).unwrap();
-            handle_bullets_hitting_ships(&self.world).unwrap(); // use bitmask for the collisions
+            handle_bullets_hitting_ships(
+                &self.world,
+                &mut self.particles_world,
+                context,
+                &mut self.rng,
+            )
+            .unwrap(); // use bitmask for the collisions
             increment_ticks_lived_system(&self.world).unwrap();
             activate_safe_bullets_system(&self.world).unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
@@ -266,6 +282,7 @@ impl EventHandler for GameState {
         draw_system(context, &self.world).unwrap();
         particles::draw::draw_system(&self.particles_world, context).unwrap();
         draw_message_system(&self.world, context).unwrap();
+        // render_hitboxes_system(&self.world, context).unwrap();
         graphics::present(context)
     }
 

@@ -16,7 +16,7 @@ pub fn activate_safe_bullets_system(world: &World) -> Result<()> {
 
     for (index, ticks) in ticks_lived.iter().enumerate() {
         let ticks: &DataWrapper<usize> = ticks.cast()?;
-        if *ticks.borrow() == 10 {
+        if *ticks.borrow() == 30 {
             let collision_bitmask: &DataWrapper<u32> = collision_bitmasks[index].cast()?;
             *collision_bitmask.borrow_mut() = MAIN_LAYER;
         }
