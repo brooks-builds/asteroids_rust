@@ -5,6 +5,7 @@ pub enum Names {
     AsteroidRadius,
     AsteroidSpeed,
     BackgroundColor,
+    ChatterName,
     CollisionBitMask,
     DebrisColor,
     DebrisParticleCount,

@@ -2,6 +2,8 @@ mod errors;
 mod helpers;
 mod systems;
 
+use std::sync::mpsc::{Receiver, Sender};
+
 use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
 use bbecs::world::{World, WorldMethods};
@@ -27,6 +29,7 @@ use systems::main::display_message::handle_message_system;
 use systems::main::fire_bullet::fire_bullet_system;
 use systems::main::handle_bullets_hitting_asteroids::handle_bullets_hitting_asteroids_system;
 use systems::main::handle_bullets_hitting_ships::handle_bullets_hitting_ships;
+use systems::main::handle_chat_message_system::handle_chat_message_system;
 use systems::main::handle_respawn::handle_respawn_system;
 use systems::main::increment_ticks_lived_system::increment_ticks_lived_system;
 use systems::main::insert_asteroids::insert_asteroids_system;
@@ -44,6 +47,7 @@ use systems::particles::update_life::update_life_system;
 use systems::update_acceleration::update_acceleration_system;
 use systems::update_mesh::update_mesh_system;
 use systems::update_movement::update_movement_system;
+use twitch_chat_wrapper::ChatMessage;
 
 pub struct GameState {
     world: World,
@@ -51,10 +55,16 @@ pub struct GameState {
     particles_world: World,
     noise: Perlin,
     noise_offsets: (f64, f64),
+    receive_from_chat: Receiver<ChatMessage>,
+    send_to_chat: Sender<String>,
 }
 
 impl GameState {
-    pub fn new(context: &mut Context) -> GameResult<Self> {
+    pub fn new(
+        context: &mut Context,
+        receive_from_chat: Receiver<ChatMessage>,
+        send_to_chat: Sender<String>,
+    ) -> GameResult<Self> {
         let rng = thread_rng();
         let mut world = World::new();
         let mut particles_world = World::new();
@@ -87,6 +97,7 @@ impl GameState {
             .register(&Names::CollisionBitMask.to_string())
             .unwrap();
         world.register(&Names::TicksLived.to_string()).unwrap();
+        world.register(&Names::ChatterName.to_string()).unwrap();
 
         particles_world.register(&Names::Mesh.to_string()).unwrap();
         particles_world
@@ -159,6 +170,8 @@ impl GameState {
             particles_world,
             noise: Perlin::new(),
             noise_offsets: (0.0, 0.0),
+            receive_from_chat,
+            send_to_chat,
         })
     }
 
@@ -220,6 +233,13 @@ impl EventHandler for GameState {
         let update_fps = *update_fps;
         drop(wrapped_update_fps);
         while timer::check_update_time(context, update_fps) {
+            handle_chat_message_system(
+                &self.receive_from_chat,
+                &mut self.world,
+                context,
+                &mut self.rng,
+            )
+            .unwrap();
             handle_input_system(&self.world, context).unwrap();
             update_acceleration_system(&self.world).unwrap();
             update_movement_system(&self.world).unwrap();
