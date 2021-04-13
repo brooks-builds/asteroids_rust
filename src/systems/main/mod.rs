@@ -1,6 +1,8 @@
 pub mod activate_safe_bullets_system;
 pub mod display_message;
+pub mod draw_labels;
 pub mod fire_bullet;
+pub mod fire_bullets_from_platforms;
 pub mod handle_bullets_hitting_asteroids;
 pub mod handle_bullets_hitting_ships;
 pub mod handle_chat_message_system;

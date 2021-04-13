@@ -20,3 +20,4 @@ pub mod insert_asteroid_into_world;
 pub mod insert_asteroids_into_world;
 pub mod insert_bullet_into_world;
 pub mod names;
+pub mod platform_firing_strategies;

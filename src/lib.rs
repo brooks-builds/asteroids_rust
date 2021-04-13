@@ -26,7 +26,9 @@ use systems::handle_input::handle_input_system;
 use systems::handle_screen_edges::handle_screen_edges_system;
 use systems::main::activate_safe_bullets_system::activate_safe_bullets_system;
 use systems::main::display_message::handle_message_system;
+use systems::main::draw_labels::draw_labels_system;
 use systems::main::fire_bullet::fire_bullet_system;
+use systems::main::fire_bullets_from_platforms::fire_bullets_from_platforms_system;
 use systems::main::handle_bullets_hitting_asteroids::handle_bullets_hitting_asteroids_system;
 use systems::main::handle_bullets_hitting_ships::handle_bullets_hitting_ships;
 use systems::main::handle_chat_message_system::handle_chat_message_system;
@@ -98,6 +100,10 @@ impl GameState {
             .unwrap();
         world.register(&Names::TicksLived.to_string()).unwrap();
         world.register(&Names::ChatterName.to_string()).unwrap();
+        world.register(&Names::Label.to_string()).unwrap();
+        world
+            .register(&Names::PlatformFiringStrategy.to_string())
+            .unwrap();
 
         particles_world.register(&Names::Mesh.to_string()).unwrap();
         particles_world
@@ -279,6 +285,7 @@ impl EventHandler for GameState {
             .unwrap(); // use bitmask for the collisions
             increment_ticks_lived_system(&self.world).unwrap();
             activate_safe_bullets_system(&self.world).unwrap();
+            fire_bullets_from_platforms_system(&mut self.world, context).unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
             particles::update_life::update_life_system(&self.particles_world).unwrap();
             particles::fade_debris_system::fade_debris_system(&self.particles_world).unwrap();
@@ -303,6 +310,7 @@ impl EventHandler for GameState {
         particles::draw::draw_system(&self.particles_world, context).unwrap();
         draw_message_system(&self.world, context).unwrap();
         // render_hitboxes_system(&self.world, context).unwrap();
+        draw_labels_system(&self.world, context).unwrap();
         graphics::present(context)
     }
 
