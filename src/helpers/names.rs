@@ -2,6 +2,7 @@
 pub enum Names {
     Acceleration,
     ArenaSize,
+    Asteroid,
     AsteroidRadius,
     AsteroidSpeed,
     BackgroundColor,

@@ -34,6 +34,7 @@ pub fn insert_asteroid_into_world(
             EntityTypes::Asteroid.to_string(),
         )?
         .with_component(&Names::Size.to_string(), radius)?
-        .with_component(&Names::CollisionBitMask.to_string(), MAIN_LAYER)?;
+        .with_component(&Names::CollisionBitMask.to_string(), MAIN_LAYER)?
+        .with_component(&Names::Asteroid.to_string(), true)?;
     Ok(())
 }

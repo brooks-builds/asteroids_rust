@@ -16,7 +16,6 @@ pub fn level_system(world: &mut World, context: &mut Context) -> Result<()> {
         return Ok(());
     }
 
-    dbg!("did we kill the asteroids?");
     let level = increment_level(&world)?;
     let asteroid_radius = get_asteroid_radius(&world)?;
     let asteroid_speed = increment_asteroid_speed(&world)?;

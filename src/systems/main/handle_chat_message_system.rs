@@ -25,7 +25,6 @@ pub fn handle_chat_message_system(
     } else {
         return Ok(());
     };
-    dbg!(&message);
     let chatter_name = if let Some(name) = message.display_name {
         name
     } else {
@@ -65,7 +64,7 @@ fn insert_platform_into_world(
         .with_component(&Names::Label.to_string(), label)?
         .with_component(
             &Names::PlatformFiringStrategy.to_string(),
-            PlatformFiringStrategy::Random.to_string(),
+            PlatformFiringStrategy::ClosestAsteroid.to_string(),
         )?
         .with_component(&Names::TicksLived.to_string(), 0_usize)?;
     Ok(())

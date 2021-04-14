@@ -104,6 +104,7 @@ impl GameState {
         world
             .register(&Names::PlatformFiringStrategy.to_string())
             .unwrap();
+        world.register(&Names::Asteroid.to_string()).unwrap();
 
         particles_world.register(&Names::Mesh.to_string()).unwrap();
         particles_world
