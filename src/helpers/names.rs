@@ -38,6 +38,7 @@ pub enum Names {
     ThrustKeyCode,
     ThrustSpeed,
     TicksToLive,
+    UFO,
     UFOKilledOnLevel,
     UFOSize,
     UpdateFps,

@@ -1,5 +1,5 @@
 use crate::helpers::{
-    bitmask::SAFE_BULLETS_LAYER, create_bullet_mesh::create_bullet_mesh, entity_types::EntityTypes,
+    bitmask::PlayerLayer, create_bullet_mesh::create_bullet_mesh, entity_types::EntityTypes,
     names::Names,
 };
 use bbecs::components::{CastComponents, ComponentData};
@@ -45,7 +45,7 @@ pub fn ufo_fire_bullets(world: &mut World, context: &mut Context) -> Result<()> 
             .with_component(&Names::Rotation.to_string(), bullet_rotation)?
             .with_component(&Names::TicksToLive.to_string(), bullet_ticks_to_live)?
             .with_component(&Names::Size.to_string(), bullet_size)?
-            .with_component(&Names::CollisionBitMask.to_string(), SAFE_BULLETS_LAYER)?
+            .with_component(&Names::CollisionBitMask.to_string(), PlayerLayer)?
             .with_component(&Names::TicksLived.to_string(), 0_usize)?;
     }
 

@@ -1,3 +1,4 @@
+use crate::helpers;
 use crate::helpers::names::Names;
 use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
@@ -6,6 +7,7 @@ use bbecs::world::{DataWrapper, World};
 use eyre::{bail, Result};
 use ggez::input::keyboard::KeyCode;
 use ggez::{input, Context};
+use helpers::bitmask::EnemyLayer;
 
 use crate::helpers::entity_types::EntityTypes;
 use crate::helpers::get_player_id::get_player_id;
@@ -27,7 +29,7 @@ pub fn fire_bullet_system(world: &mut World, context: &mut Context) -> Result<()
     acceleration.normalize();
     acceleration.multiply_scalar(13.0);
 
-    insert_bullet_into_world(context, world, location, acceleration)?;
+    insert_bullet_into_world(context, world, location, acceleration, EnemyLayer)?;
     set_reloading_ticks_left(&world)?;
 
     Ok(())

@@ -1,9 +1,8 @@
-use eyre::Result;
-
 #[derive(strum_macros::ToString)]
 pub enum PlatformFiringStrategy {
     Random,
     ClosestAsteroid,
+    Ufo,
 }
 
 impl PlatformFiringStrategy {
@@ -11,6 +10,7 @@ impl PlatformFiringStrategy {
         match string {
             "Random" => Self::Random,
             "ClosestAsteroid" => Self::ClosestAsteroid,
+            "Ufo" => Self::Ufo,
             _ => Self::Random,
         }
     }

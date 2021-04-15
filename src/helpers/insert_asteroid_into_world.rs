@@ -5,7 +5,7 @@ use eyre::Result;
 use ggez::Context;
 use rand::random;
 
-use super::bitmask::MAIN_LAYER;
+use super::bitmask::EnemyLayer;
 use super::create_asteroid_mesh;
 use super::entity_types::EntityTypes;
 use super::names::Names;
@@ -34,7 +34,7 @@ pub fn insert_asteroid_into_world(
             EntityTypes::Asteroid.to_string(),
         )?
         .with_component(&Names::Size.to_string(), radius)?
-        .with_component(&Names::CollisionBitMask.to_string(), MAIN_LAYER)?
+        .with_component(&Names::CollisionBitMask.to_string(), EnemyLayer)?
         .with_component(&Names::Asteroid.to_string(), true)?;
     Ok(())
 }

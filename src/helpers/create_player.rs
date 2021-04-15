@@ -3,7 +3,7 @@ use bbecs::world::{World, WorldMethods};
 use eyre::Result;
 use ggez::graphics::Mesh;
 
-use super::bitmask::MAIN_LAYER;
+use super::bitmask::PlayerLayer;
 use super::entity_types::EntityTypes;
 use super::names::Names;
 
@@ -22,6 +22,6 @@ pub fn create_player(
         .with_component(&Names::Mesh.to_string(), player_ship)?
         .with_component(&Names::Marker.to_string(), EntityTypes::Player.to_string())?
         .with_component(&Names::Size.to_string(), size)?
-        .with_component(&Names::CollisionBitMask.to_string(), MAIN_LAYER)?;
+        .with_component(&Names::CollisionBitMask.to_string(), PlayerLayer)?;
     Ok(())
 }

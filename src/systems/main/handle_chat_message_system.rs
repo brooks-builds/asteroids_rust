@@ -64,7 +64,7 @@ fn insert_platform_into_world(
         .with_component(&Names::Label.to_string(), label)?
         .with_component(
             &Names::PlatformFiringStrategy.to_string(),
-            PlatformFiringStrategy::ClosestAsteroid.to_string(),
+            PlatformFiringStrategy::Ufo.to_string(),
         )?
         .with_component(&Names::TicksLived.to_string(), 0_usize)?;
     Ok(())

@@ -24,7 +24,6 @@ use systems::draw::draw_system;
 use systems::draw_message::draw_message_system;
 use systems::handle_input::handle_input_system;
 use systems::handle_screen_edges::handle_screen_edges_system;
-use systems::main::activate_safe_bullets_system::activate_safe_bullets_system;
 use systems::main::display_message::handle_message_system;
 use systems::main::draw_labels::draw_labels_system;
 use systems::main::fire_bullet::fire_bullet_system;
@@ -105,6 +104,7 @@ impl GameState {
             .register(&Names::PlatformFiringStrategy.to_string())
             .unwrap();
         world.register(&Names::Asteroid.to_string()).unwrap();
+        world.register(&Names::UFO.to_string()).unwrap();
 
         particles_world.register(&Names::Mesh.to_string()).unwrap();
         particles_world
@@ -285,8 +285,8 @@ impl EventHandler for GameState {
             )
             .unwrap(); // use bitmask for the collisions
             increment_ticks_lived_system(&self.world).unwrap();
-            activate_safe_bullets_system(&self.world).unwrap();
             fire_bullets_from_platforms_system(&mut self.world, context).unwrap();
+            handle_respawn_system(&mut self.world, context).unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
             particles::update_life::update_life_system(&self.particles_world).unwrap();
             particles::fade_debris_system::fade_debris_system(&self.particles_world).unwrap();
@@ -320,15 +320,5 @@ impl EventHandler for GameState {
             .add_resource(Names::ArenaSize.to_string(), Point::new(width, height));
         let screen_size = Rect::new(0.0, 0.0, width, height);
         graphics::set_screen_coordinates(context, screen_size).unwrap()
-    }
-
-    fn key_down_event(
-        &mut self,
-        context: &mut Context,
-        keycode: KeyCode,
-        _keymods: ggez::event::KeyMods,
-        _repeat: bool,
-    ) {
-        handle_respawn_system(&mut self.world, keycode, context).unwrap();
     }
 }
