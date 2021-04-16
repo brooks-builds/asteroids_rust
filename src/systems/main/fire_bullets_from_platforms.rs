@@ -1,4 +1,4 @@
-use crate::helpers::bitmask::EnemyLayer;
+use crate::helpers::bitmask::ENEMY_LAYER;
 use crate::helpers::get_player_id::get_player_id;
 use crate::helpers::insert_bullet_into_world;
 use crate::helpers::names::Names;
@@ -59,7 +59,7 @@ pub fn fire_bullets_from_platforms_system(world: &mut World, context: &mut Conte
     }
 
     for (location, acceleration) in bullet_infos {
-        insert_bullet_into_world(context, world, location, acceleration, EnemyLayer)?;
+        insert_bullet_into_world(context, world, location, acceleration, ENEMY_LAYER)?;
     }
     Ok(())
 }
@@ -114,10 +114,10 @@ fn closest_asteroid_firing_strategy(world: &World, platform_location: &Point) ->
 
         if distance < closest_asteroid_distance {
             closest_asteroid_location = *location.borrow() - *platform_location;
-            // let mut closest_asteroid_velocity = *velocity.borrow();
-            // closest_asteroid_velocity.normalize();
-            // closest_asteroid_velocity.multiply_scalar(100.0);
-            // closest_asteroid_location += closest_asteroid_velocity;
+            let mut closest_asteroid_velocity = *velocity.borrow();
+            closest_asteroid_velocity.normalize();
+            closest_asteroid_velocity.multiply_scalar(50.0);
+            closest_asteroid_location += closest_asteroid_velocity;
             closest_asteroid_distance = distance;
         }
     }
@@ -139,7 +139,7 @@ fn random_firing_strategy() -> Point {
 fn does_player_exist(world: &World) -> Result<bool> {
     let player_id = get_player_id(world)?;
 
-    if let Some(_) = player_id {
+    if player_id.is_some() {
         Ok(true)
     } else {
         Ok(false)

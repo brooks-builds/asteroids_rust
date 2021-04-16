@@ -171,6 +171,13 @@ impl GameState {
         Self::create_score(&mut world).unwrap();
         Self::create_lives_left_text(&mut world, context, lives_remaining).unwrap();
 
+        send_to_chat
+            .send("Asteroids Game Online: Join in by chatting.".to_string())
+            .unwrap();
+        send_to_chat
+            .send("Available strategies: #asteroid, #ufo, #random".to_string())
+            .unwrap();
+
         Ok(Self {
             world,
             rng,

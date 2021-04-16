@@ -1,3 +1,4 @@
+use crate::helpers::chat_command::{self, ChatCommand};
 use crate::helpers::names::Names;
 use crate::helpers::platform_firing_strategies::PlatformFiringStrategy;
 use bbecs::components::CastComponents;
@@ -25,13 +26,14 @@ pub fn handle_chat_message_system(
     } else {
         return Ok(());
     };
+    let chat_command = chat_command::ChatCommand::from_message(&message.message);
     let chatter_name = if let Some(name) = message.display_name {
         name
     } else {
         message.name
     };
 
-    if check_if_platform_exists(&world, &chatter_name)? {
+    if update_platform_firing_strategy(&world, &chatter_name, &chat_command)?.is_some() {
         return Ok(());
     }
 
@@ -40,7 +42,16 @@ pub fn handle_chat_message_system(
     let mesh = create_platform_mesh(context, size, message.color_rgb)?;
     let label = create_label(&chatter_name);
 
-    insert_platform_into_world(world, location, mesh, size, chatter_name, label)?;
+    // platform doesn't exist, create platform with provided firing strategy
+    insert_platform_into_world(
+        world,
+        location,
+        mesh,
+        size,
+        chatter_name,
+        label,
+        chat_command,
+    )?;
 
     Ok(())
 }
@@ -52,8 +63,15 @@ fn insert_platform_into_world(
     size: f32,
     chatter_name: String,
     label: Text,
+    command: ChatCommand,
 ) -> Result<()> {
     let rotation = 0.0_f32;
+    let firing_strategy = if let Some(strategy) = PlatformFiringStrategy::from_chat_command(command)
+    {
+        strategy
+    } else {
+        PlatformFiringStrategy::Random
+    };
     world
         .spawn_entity()?
         .with_component(&Names::Location.to_string(), location)?
@@ -64,7 +82,7 @@ fn insert_platform_into_world(
         .with_component(&Names::Label.to_string(), label)?
         .with_component(
             &Names::PlatformFiringStrategy.to_string(),
-            PlatformFiringStrategy::Ufo.to_string(),
+            firing_strategy.to_string(),
         )?
         .with_component(&Names::TicksLived.to_string(), 0_usize)?;
     Ok(())
@@ -88,16 +106,37 @@ fn create_platform_mesh(context: &mut Context, size: f32, color: (u8, u8, u8)) -
         .build(context)?)
 }
 
-fn check_if_platform_exists(world: &World, message_name: &str) -> Result<bool> {
-    let query = world.query(vec![&Names::ChatterName.to_string()])?;
+fn update_platform_firing_strategy(
+    world: &World,
+    message_name: &str,
+    command: &ChatCommand,
+) -> Result<Option<()>> {
+    let query = world.query(vec![
+        &Names::ChatterName.to_string(),
+        &Names::PlatformFiringStrategy.to_string(),
+    ])?;
     let chatter_names = query.get(&Names::ChatterName.to_string()).unwrap();
-    for chatter_name in chatter_names {
+    let firing_strategies = query
+        .get(&Names::PlatformFiringStrategy.to_string())
+        .unwrap();
+    for (index, chatter_name) in chatter_names.iter().enumerate() {
         let chatter_name: &DataWrapper<String> = chatter_name.cast()?;
         if *chatter_name.borrow() == message_name {
-            return Ok(true);
+            let new_firing_strategy = if let Some(firing_strategy) =
+                PlatformFiringStrategy::from_chat_command(*command)
+            {
+                firing_strategy
+            } else {
+                return Ok(Some(()));
+            };
+
+            dbg!(&new_firing_strategy);
+            let firing_strategy: &DataWrapper<String> = firing_strategies[index].cast()?;
+            *firing_strategy.borrow_mut() = new_firing_strategy.to_string();
+            return Ok(Some(()));
         }
     }
-    Ok(false)
+    Ok(None)
 }
 
 fn create_label(name: &str) -> Text {

@@ -1,4 +1,4 @@
-use crate::helpers::bitmask::EnemyLayer;
+use crate::helpers::bitmask::ENEMY_LAYER;
 use crate::helpers::create_ufo_mesh::create_ufo_mesh;
 use crate::helpers::{entity_types::EntityTypes, names::Names};
 use bbecs::components::CastComponents;
@@ -48,7 +48,7 @@ pub fn spawn_ufo_system(
         .with_component(&Names::Rotation.to_string(), rotation)?
         .with_component(&Names::Acceleration.to_string(), acceleration)?
         .with_component(&Names::Velocity.to_string(), velocity)?
-        .with_component(&Names::CollisionBitMask.to_string(), EnemyLayer)?
+        .with_component(&Names::CollisionBitMask.to_string(), ENEMY_LAYER)?
         .with_component(&Names::Size.to_string(), ufo_size)?
         .with_component(&Names::UFO.to_string(), true)?;
     Ok(())

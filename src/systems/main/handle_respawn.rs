@@ -7,7 +7,6 @@ use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
 use bbecs::world::{DataWrapper, World, ENTITY_ID};
 use eyre::Result;
-use ggez::event::KeyCode;
 use ggez::graphics::{self, Color};
 use ggez::Context;
 
@@ -84,7 +83,7 @@ fn is_player_safe_to_respawn(world: &World, context: &mut Context) -> Result<boo
         let size: &DataWrapper<f32> = sizes[index].cast()?;
         let distance_point = center - *location.borrow();
 
-        if distance_point.length() < 50.0 {
+        if distance_point.length() < *size.borrow() * 2.0 {
             return Ok(false);
         }
     }
