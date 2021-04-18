@@ -8,6 +8,7 @@ use bbecs::data_types::point::Point;
 use bbecs::resources::resource::ResourceCast;
 use bbecs::world::{World, WorldMethods};
 use eyre::Result;
+use ggez::audio::SoundData;
 use ggez::event::{EventHandler, KeyCode};
 use ggez::graphics::{Color, Rect, WHITE};
 use ggez::{graphics, timer, Context, GameResult};
@@ -36,6 +37,12 @@ use systems::main::increment_ticks_lived_system::increment_ticks_lived_system;
 use systems::main::insert_asteroids::insert_asteroids_system;
 use systems::main::level::level_system;
 use systems::main::move_ufo_system::move_ufo_system;
+use systems::main::play_asteroid_strategy_set_system::play_asteroid_strategy_set_system;
+use systems::main::play_explosion_sound_system::play_explosion_sound_system;
+use systems::main::play_gun_system::play_gun_system;
+use systems::main::play_random_firing_strategy_set_system::play_random_firing_strategy_set_system;
+use systems::main::play_reinforcements_sound_system::play_reinforcements_sound_system;
+use systems::main::play_ufo_firing_strategy_set_system::play_ufo_firing_strategy_set_system;
 #[allow(unused_imports)]
 use systems::main::render_hitboxes::render_hitboxes_system;
 use systems::main::spawn_ufo_system::spawn_ufo_system;
@@ -57,7 +64,6 @@ pub struct GameState {
     noise: Perlin,
     noise_offsets: (f64, f64),
     receive_from_chat: Receiver<ChatMessage>,
-    send_to_chat: Sender<String>,
 }
 
 impl GameState {
@@ -82,6 +88,13 @@ impl GameState {
         let level = 1_u32;
         let lives_remaining = 5_u32;
         let ufo_killed_on_level = 1_u32;
+        let laser_fire_sound = SoundData::new(context, "/air_woosh_underwater.mp3")?;
+        let explosion_sound = SoundData::new(context, "/big_explosion_distant.mp3")?;
+        let reinforcements_sound = SoundData::new(context, "/reinforcements.mp3")?;
+        let random_firing_strategy_set =
+            SoundData::new(context, "/random_firing_strategy_set.mp3")?;
+        let target_nearest_asteroid = SoundData::new(context, "/target_nearest_asteroid.mp3")?;
+        let ufo_firing_strategy_set = SoundData::new(context, "/ufo_firing_strategy_set.mp3")?;
 
         world.register(&Names::Location.to_string()).unwrap();
         world.register(&Names::Thrusting.to_string()).unwrap();
@@ -147,6 +160,27 @@ impl GameState {
         world.add_resource(Names::ReloadingTicksLeft.to_string(), 0_u32);
         world.add_resource(Names::UFOSize.to_string(), 75.0_f32);
         world.add_resource(Names::UFOKilledOnLevel.to_string(), ufo_killed_on_level);
+        world.add_resource(Names::NeedToPlayGunSound.to_string(), false);
+        world.add_resource(Names::GunSound.to_string(), laser_fire_sound);
+        world.add_resource(Names::NeedToPlayExplosionSound.to_string(), false);
+        world.add_resource(Names::ExplosionSound.to_string(), explosion_sound);
+        world.add_resource(Names::NeedtoPlayReinforcementsSound.to_string(), false);
+        world.add_resource(Names::ReinforcementsSound.to_string(), reinforcements_sound);
+        world.add_resource(Names::NeedToPlayAsteroidStrategySet.to_string(), false);
+        world.add_resource(
+            Names::AsteroidStrategySetSound.to_string(),
+            target_nearest_asteroid,
+        );
+        world.add_resource(Names::NeedToPlayRandomFiringStrategySet.to_string(), false);
+        world.add_resource(
+            Names::RandomFiringStrategySetSound.to_string(),
+            random_firing_strategy_set,
+        );
+        world.add_resource(Names::NeedToPlayUfoFiringStrategySet.to_string(), false);
+        world.add_resource(
+            Names::UFOStrategySetSound.to_string(),
+            ufo_firing_strategy_set,
+        );
 
         particles_world.add_resource(Names::DebrisParticleSpeed.to_string(), 2.0_f32);
         particles_world.add_resource(Names::DebrisParticleCount.to_string(), 40_u32);
@@ -185,7 +219,6 @@ impl GameState {
             noise: Perlin::new(),
             noise_offsets: (0.0, 0.0),
             receive_from_chat,
-            send_to_chat,
         })
     }
 
@@ -294,6 +327,12 @@ impl EventHandler for GameState {
             increment_ticks_lived_system(&self.world).unwrap();
             fire_bullets_from_platforms_system(&mut self.world, context).unwrap();
             handle_respawn_system(&mut self.world, context).unwrap();
+            play_gun_system(&self.world, context).unwrap();
+            play_explosion_sound_system(&self.world, context).unwrap();
+            play_reinforcements_sound_system(&self.world, context).unwrap();
+            play_random_firing_strategy_set_system(&self.world, context).unwrap();
+            play_asteroid_strategy_set_system(&self.world, context).unwrap();
+            play_ufo_firing_strategy_set_system(&self.world, context).unwrap();
             particles::update_locations::update_locations_system(&self.particles_world).unwrap();
             particles::update_life::update_life_system(&self.particles_world).unwrap();
             particles::fade_debris_system::fade_debris_system(&self.particles_world).unwrap();

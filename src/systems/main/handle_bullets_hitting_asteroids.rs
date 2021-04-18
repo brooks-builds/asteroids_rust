@@ -77,6 +77,14 @@ pub fn handle_bullets_hitting_asteroids_system(
         }
     }
 
+    if !destroyed_asteroids.is_empty() {
+        let mut need_to_play_sound = world
+            .get_resource(&Names::NeedToPlayExplosionSound.to_string())?
+            .borrow_mut();
+        let need_to_play_sound: &mut bool = need_to_play_sound.cast_mut()?;
+        *need_to_play_sound = true;
+    }
+
     Ok(destroyed_asteroids)
 }
 

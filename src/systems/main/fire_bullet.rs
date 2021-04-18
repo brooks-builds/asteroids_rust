@@ -31,7 +31,17 @@ pub fn fire_bullet_system(world: &mut World, context: &mut Context) -> Result<()
 
     insert_bullet_into_world(context, world, location, acceleration, ENEMY_LAYER)?;
     set_reloading_ticks_left(&world)?;
+    set_firing_gun_sound(&world)?;
 
+    Ok(())
+}
+
+fn set_firing_gun_sound(world: &World) -> Result<()> {
+    let mut need_to_play_gun_sound = world
+        .get_resource(&Names::NeedToPlayGunSound.to_string())?
+        .borrow_mut();
+    let need_to_play_gun_sound: &mut bool = need_to_play_gun_sound.cast_mut()?;
+    *need_to_play_gun_sound = true;
     Ok(())
 }
 

@@ -3,6 +3,7 @@ use crate::helpers::names::Names;
 use crate::helpers::platform_firing_strategies::PlatformFiringStrategy;
 use bbecs::components::CastComponents;
 use bbecs::data_types::point::Point;
+use bbecs::resources::resource::ResourceCast;
 use bbecs::world::DataWrapper;
 use bbecs::world::{World, WorldMethods};
 use eyre::Result;
@@ -85,6 +86,13 @@ fn insert_platform_into_world(
             firing_strategy.to_string(),
         )?
         .with_component(&Names::TicksLived.to_string(), 0_usize)?;
+
+    let mut need_to_play_reinforcement_sound = world
+        .get_resource(&Names::NeedtoPlayReinforcementsSound.to_string())?
+        .borrow_mut();
+    let need_to_play_reinforcement_sound: &mut bool =
+        need_to_play_reinforcement_sound.cast_mut()?;
+    *need_to_play_reinforcement_sound = true;
     Ok(())
 }
 
@@ -130,9 +138,22 @@ fn update_platform_firing_strategy(
                 return Ok(Some(()));
             };
 
-            dbg!(&new_firing_strategy);
             let firing_strategy: &DataWrapper<String> = firing_strategies[index].cast()?;
             *firing_strategy.borrow_mut() = new_firing_strategy.to_string();
+
+            let mut need_to_play_sound = match new_firing_strategy {
+                PlatformFiringStrategy::Random => world
+                    .get_resource(&Names::NeedToPlayRandomFiringStrategySet.to_string())?
+                    .borrow_mut(),
+                PlatformFiringStrategy::ClosestAsteroid => world
+                    .get_resource(&Names::NeedToPlayAsteroidStrategySet.to_string())?
+                    .borrow_mut(),
+                PlatformFiringStrategy::Ufo => world
+                    .get_resource(&Names::NeedToPlayUfoFiringStrategySet.to_string())?
+                    .borrow_mut(),
+            };
+            let need_to_play_sound: &mut bool = need_to_play_sound.cast_mut()?;
+            *need_to_play_sound = true;
             return Ok(Some(()));
         }
     }
